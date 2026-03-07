@@ -7,7 +7,7 @@
 #   bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/install.sh)
 #
 # Optional env overrides before piping:
-#   CT_ID=200 CT_RAM=1024 bash <(curl -fsSL ...)
+#   CT_ID=200 CT_RAM=1024 FADENBRETT_PORT=8080 bash <(curl -fsSL ...)
 #
 # Compatible with Proxmox VE 7.x and 8.x
 # ============================================================================
@@ -24,13 +24,12 @@ CT_ID="${CT_ID:-$(pvesh get /cluster/nextid 2>/dev/null || echo 200)}"
 HOSTNAME="${HOSTNAME:-fadenbrett}"
 CT_RAM="${CT_RAM:-512}"
 CT_CORES="${CT_CORES:-1}"
-CT_DISK="${CT_DISK:-4}"
+CT_DISK="${CT_DISK:-8}"
 CT_STORAGE="${CT_STORAGE:-}"
 CT_BRIDGE="${CT_BRIDGE:-vmbr0}"
 FADENBRETT_PORT="${FADENBRETT_PORT:-80}"
-IMAGE_TAG="${IMAGE_TAG:-latest}"
-IMAGE_WEB="ghcr.io/$(echo "${GITHUB_OWNER:-ranni}" | tr '[:upper:]' '[:lower:]')/fadenbrett-web:${IMAGE_TAG}"
-IMAGE_API="ghcr.io/$(echo "${GITHUB_OWNER:-ranni}" | tr '[:upper:]' '[:lower:]')/fadenbrett-api:${IMAGE_TAG}"
+
+REPO_URL="https://github.com/raniellimontagna/fadenbrett.git"
 
 # ── Detect storage if not provided ────────────────────────────────────────────
 if [[ -z "$CT_STORAGE" ]]; then
@@ -76,12 +75,13 @@ pct start "$CT_ID"
 sleep 8
 msg_ok "Container started"
 
-# ── Install Docker inside the LXC ────────────────────────────────────────────
+# ── Install Docker + git inside the LXC ──────────────────────────────────────
 msg_info "Installing Docker (this may take a minute)"
 pct exec "$CT_ID" -- bash -c "
   set -euo pipefail
+  export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq
-  apt-get install -y -qq ca-certificates curl gnupg
+  apt-get install -y -qq ca-certificates curl gnupg git
   install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   chmod a+r /etc/apt/keyrings/docker.gpg
@@ -92,49 +92,20 @@ pct exec "$CT_ID" -- bash -c "
 " 2>&1 | grep -v "^$" || true
 msg_ok "Docker installed"
 
-# ── Create compose stack ──────────────────────────────────────────────────────
-msg_info "Deploying Fadenbrett"
+# ── Clone repo and build images locally ──────────────────────────────────────
+msg_info "Cloning Fadenbrett and building (first build takes a few minutes)"
 pct exec "$CT_ID" -- bash -c "
   set -euo pipefail
-  mkdir -p /opt/fadenbrett/data/uploads
-  cat > /opt/fadenbrett/docker-compose.yml <<'COMPOSE'
-services:
-  api:
-    image: ${IMAGE_API}
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - DB_PATH=/app/data/fadenbrett.db
-      - UPLOAD_DIR=/app/data/uploads
-    volumes:
-      - /opt/fadenbrett/data:/app/data
-    networks: [internal]
-    healthcheck:
-      test: [\"CMD\", \"wget\", \"-qO-\", \"http://localhost:3001/health\"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+  git clone --depth 1 ${REPO_URL} /opt/fadenbrett
+  cd /opt/fadenbrett/deploy
+  PORT=${FADENBRETT_PORT} docker compose up --build -d
+" 2>&1 | grep -v "^$" || true
+msg_ok "Fadenbrett built and deployed"
 
-  web:
-    image: ${IMAGE_WEB}
-    restart: unless-stopped
-    ports:
-      - '${FADENBRETT_PORT}:80'
-    networks: [internal]
-    depends_on:
-      api:
-        condition: service_healthy
-
-networks:
-  internal: {}
-COMPOSE
-
-  # Pull images and start
-  cd /opt/fadenbrett
-  docker compose pull --quiet
-  docker compose up -d
+# ── Write PORT to env file for systemd ───────────────────────────────────────
+pct exec "$CT_ID" -- bash -c "
+  echo 'PORT=${FADENBRETT_PORT}' > /opt/fadenbrett/deploy/.env
 "
-msg_ok "Fadenbrett deployed"
 
 # ── Auto-start compose on LXC boot ───────────────────────────────────────────
 pct exec "$CT_ID" -- bash -c "
@@ -145,7 +116,7 @@ After=docker.service network-online.target
 Requires=docker.service
 
 [Service]
-WorkingDirectory=/opt/fadenbrett
+WorkingDirectory=/opt/fadenbrett/deploy
 ExecStart=/usr/bin/docker compose up
 ExecStop=/usr/bin/docker compose down
 Restart=on-failure
@@ -166,6 +137,6 @@ echo ""
 echo -e "\033[1;92m  ✔ Fadenbrett is running!\033[m"
 echo -e "  ─────────────────────────────────────────"
 echo -e "  URL:      \033[1;96mhttp://${CT_IP}:${FADENBRETT_PORT}\033[m"
-echo -e "  Data dir: /opt/fadenbrett/data  (inside LXC $CT_ID)"
-echo -e "  Update:   bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/update.sh) CT_ID=$CT_ID"
+echo -e "  Data dir: inside LXC $CT_ID at /opt/fadenbrett/deploy (Docker volume)"
+echo -e "  Update:   CT_ID=$CT_ID bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/update.sh)"
 echo ""

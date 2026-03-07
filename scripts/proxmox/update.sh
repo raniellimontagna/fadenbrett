@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Fadenbrett — Proxmox LXC Updater
-# Pulls latest images and restarts the stack without data loss.
+# Pulls latest source and rebuilds the stack without data loss.
 #
 # Usage (run on Proxmox VE host shell):
 #   CT_ID=200 bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/update.sh)
@@ -14,23 +14,22 @@ msg_ok()    { local msg="$1"; echo -e "${BFR} ${GN}✔ ${msg}${CL}"; }
 msg_error() { local msg="$1"; echo -e "${BFR} ${RD}✖ ${msg}${CL}"; exit 1; }
 
 CT_ID="${CT_ID:-200}"
-IMAGE_TAG="${IMAGE_TAG:-latest}"
 
 # Verify container exists and is running
 pct status "$CT_ID" &>/dev/null || msg_error "Container $CT_ID not found"
 
-msg_info "Pulling latest Fadenbrett images into CT $CT_ID"
+msg_info "Pulling latest Fadenbrett source into CT $CT_ID"
 pct exec "$CT_ID" -- bash -c "
   cd /opt/fadenbrett
-  docker compose pull --quiet
+  git pull --ff-only
 " 2>&1 | grep -v "^$" || true
-msg_ok "Images updated"
+msg_ok "Source updated"
 
-msg_info "Restarting Fadenbrett"
+msg_info "Rebuilding and restarting Fadenbrett"
 pct exec "$CT_ID" -- bash -c "
-  cd /opt/fadenbrett
-  docker compose up -d --remove-orphans
-"
+  cd /opt/fadenbrett/deploy
+  docker compose up --build -d --remove-orphans
+" 2>&1 | grep -v "^$" || true
 msg_ok "Fadenbrett restarted"
 
 CT_IP=$(pct exec "$CT_ID" -- hostname -I 2>/dev/null | awk '{print $1}' || echo "<IP pending>")
