@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
+    "pretest": "pnpm rebuild better-sqlite3",
     "test": "vitest run"
   },
   "dependencies": {
