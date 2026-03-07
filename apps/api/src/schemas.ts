@@ -42,6 +42,8 @@ export const CreateConnectionSchema = z.object({
   label: z.string().default(''),
   style: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
   color: z.string().default('#a78bfa'),
+  routeType: z.enum(['bezier', 'straight', 'step']).default('bezier'),
+  curvature: z.number().min(0).max(1).default(0.3),
 });
 
 export const UpdateConnectionSchema = CreateConnectionSchema.partial().omit({ sourceId: true, targetId: true });

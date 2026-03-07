@@ -2,8 +2,10 @@ import { useCallback, useState } from 'react'
 import {
   type ConnectionData,
   type ConnectionStyle,
+  type RouteType,
   CONNECTION_STYLES,
   CONNECTION_COLORS,
+  ROUTE_TYPES,
 } from './types'
 
 interface ConnectionFormProps {
@@ -17,13 +19,15 @@ export function ConnectionForm({ initial, onSave, onCancel, onDelete }: Connecti
   const [label, setLabel] = useState(initial.label)
   const [style, setStyle] = useState<ConnectionStyle>(initial.style)
   const [color, setColor] = useState(initial.color)
+  const [routeType, setRouteType] = useState<RouteType>(initial.routeType ?? 'bezier')
+  const [curvature, setCurvature] = useState(Math.round((initial.curvature ?? 0.3) * 100))
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
-      onSave({ label, style, color })
+      onSave({ label, style, color, routeType, curvature: curvature / 100 })
     },
-    [label, style, color, onSave],
+    [label, style, color, routeType, curvature, onSave],
   )
 
   return (
@@ -69,6 +73,43 @@ export function ConnectionForm({ initial, onSave, onCancel, onDelete }: Connecti
             ))}
           </div>
         </div>
+
+        <div className="mb-3">
+          <label className="mb-1 block text-xs text-fadenbrett-muted">Tipo de rota</label>
+          <div className="flex gap-2">
+            {ROUTE_TYPES.map((r) => (
+              <button
+                key={r.value}
+                type="button"
+                onClick={() => setRouteType(r.value)}
+                className={`flex-1 rounded border px-2 py-1.5 text-xs transition-colors ${
+                  routeType === r.value
+                    ? 'border-fadenbrett-accent bg-fadenbrett-accent/20 text-fadenbrett-text'
+                    : 'border-fadenbrett-muted/30 text-fadenbrett-muted hover:border-fadenbrett-muted/60'
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {routeType === 'bezier' && (
+          <div className="mb-3">
+            <label className="mb-1 flex items-center justify-between text-xs text-fadenbrett-muted">
+              <span>Curvatura</span>
+              <span className="text-fadenbrett-text">{curvature}%</span>
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={curvature}
+              onChange={(e) => setCurvature(Number(e.target.value))}
+              className="w-full accent-fadenbrett-accent"
+            />
+          </div>
+        )}
 
         <div className="mb-4">
           <label className="mb-1 block text-xs text-fadenbrett-muted">Color</label>

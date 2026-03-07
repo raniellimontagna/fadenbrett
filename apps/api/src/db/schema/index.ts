@@ -43,6 +43,8 @@ export const connections = sqliteTable('connections', {
   label: text('label').default(''),
   style: text('style').notNull().default('solid'),
   color: text('color').notNull().default('#a78bfa'),
+  routeType: text('route_type').notNull().default('bezier'),
+  curvature: real('curvature').notNull().default(0.3),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

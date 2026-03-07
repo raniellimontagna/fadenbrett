@@ -1,9 +1,16 @@
 export type ConnectionStyle = 'solid' | 'dashed' | 'dotted'
+export type RouteType = 'bezier' | 'straight' | 'step'
 
 export const CONNECTION_STYLES: { value: ConnectionStyle; label: string }[] = [
   { value: 'solid', label: 'Solid' },
   { value: 'dashed', label: 'Dashed' },
   { value: 'dotted', label: 'Dotted' },
+]
+
+export const ROUTE_TYPES: { value: RouteType; label: string }[] = [
+  { value: 'bezier', label: 'Bezier' },
+  { value: 'straight', label: 'Reta' },
+  { value: 'step', label: 'Angulo reto' },
 ]
 
 export const CONNECTION_COLORS = [
@@ -21,10 +28,14 @@ export interface ConnectionData {
   label: string
   style: ConnectionStyle
   color: string
+  routeType: RouteType
+  curvature: number
 }
 
 export const DEFAULT_CONNECTION_DATA: ConnectionData = {
   label: '',
   style: 'solid',
   color: '#b91c1c',
+  routeType: 'bezier',
+  curvature: 0.3,
 }
