@@ -1318,7 +1318,7 @@
       "phase": "Melhorias v2",
       "priority": 37,
       "priorityLabel": "P2",
-      "passes": false,
+      "passes": true,
       "description": "O app tem varios atalhos de teclado (Ctrl+Z, Delete, Ctrl+S, +/-, 0, Shift+double-click) mas nenhuma documentacao acessivel na propria interface. Um overlay acionado por '?' ou botao de ajuda resolve a descobribilidade.",
       "userStories": [
         "Como usuario novo, quero descobrir os atalhos de teclado disponiveis sem precisar ler documentacao externa.",

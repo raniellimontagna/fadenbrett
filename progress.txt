@@ -588,3 +588,18 @@
   - When duplicating nodes with parentId (frames), only remap parentId if the parent is also in the duplicated set
   - Context menu `handleAction` already calls `onClose`, so the onDuplicate wrapper in investigation-canvas also calls closeContextMenu redundantly — harmless but worth noting
 ---
+--- Iteration 7 completed at sáb 07 mar 2026 20:47:04 -03 ---
+
+## 2026-03-07 - S037
+- Implemented keyboard shortcuts help overlay (ShortcutsOverlay component)
+- Pressing '?' (when not editing text) toggles the overlay via global keydown listener in App.tsx
+- Help button (?) added to desktop action bar and mobile menu
+- Overlay lists all shortcuts grouped by section: Navegacao, Edicao, Selecao e criacao, Apresentacao
+- Closeable with Escape or click outside (follows TemplateGallery modal pattern)
+- Files changed: `apps/web/src/features/canvas/shortcuts-overlay.tsx` (new), `apps/web/src/App.tsx`
+- **Learnings for future iterations:**
+  - Modal/overlay pattern: use `fixed inset-0 z-50 bg-black/60 backdrop-blur-sm` with ref + onMouseDown for click-outside
+  - TemplateGallery is the best reference for full-screen modal with header, close button, and escape handler
+  - Global keyboard handlers should be added via useEffect in App.tsx (not the canvas onKeyDown) for app-wide shortcuts
+  - Desktop buttons go in the `hidden md:flex` div; mobile buttons go in the `mobileMenuOpen` conditional div
+---
