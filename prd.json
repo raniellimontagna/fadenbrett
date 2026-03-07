@@ -1177,7 +1177,7 @@
       "phase": "Melhorias v2",
       "priority": 32,
       "priorityLabel": "P0",
-      "passes": false,
+      "passes": true,
       "description": "O ReactFlow recebe onDoubleClick={onPaneDoubleClick} que captura TODOS os double-clicks inclusive sobre nodes. Quando o usuario da double-click em um card, disparam simultaneamente onNodeDoubleClick (abre form de edicao) e onDoubleClick (abre form de criacao). Resultado: dois modais abertos ou conflito de estado.",
       "bugConfirmed": true,
       "bugLocation": "apps/web/src/features/canvas/investigation-canvas.tsx:610",

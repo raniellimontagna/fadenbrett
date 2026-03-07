@@ -8,6 +8,7 @@
 - Dark theme by default: custom colors under `--color-fadenbrett-*`
 - React Flow typed node data: cast to `Record<string, unknown>` when storing, cast back to specific type when reading in node components
 - Custom nodeTypes object must be defined outside the component (or useMemo) to prevent re-mount cycles
+- React Flow `onDoubleClick` fires for ALL elements (pane, nodes, edges). No `onPaneDoubleClick` prop exists — guard with `target.closest('.react-flow__node')`
 - S023: `better-sqlite3` is a native module — requires `node-gyp rebuild` after `pnpm install` if bindings aren't prebuilt for the current Node version; run `node-gyp rebuild` in the better-sqlite3 package dir
 - S023: Use raw SQL in `runMigrations()` (CREATE TABLE IF NOT EXISTS) instead of drizzle-kit at runtime — simpler and zero extra deps
 - S023: API routes under `/api` prefix registered via Fastify scoped plugin; route files export a `FastifyInstance => Promise<void>` function
@@ -520,4 +521,14 @@
   - Theme switcher buttons appear in TWO places in App.tsx: desktop toolbar (~line 160) and mobile menu (~line 250) - both must be updated together
   - Inline SVG icons follow Lucide icon conventions: viewBox="0 0 24 24", fill="none", stroke="currentColor", strokeWidth={2}, strokeLinecap="round", strokeLinejoin="round"
   - When editing duplicate markup in App.tsx, use unique surrounding context to differentiate the desktop vs mobile instances
+---
+--- Iteration 2 completed at sáb 07 mar 2026 20:32:28 -03 ---
+
+## 2026-03-07 - S032
+- Fixed double-click conflict: onDoubleClick on ReactFlow fires for ALL double-clicks (nodes, edges, pane). Added guard in handler to bail out if target is inside `.react-flow__node` or `.react-flow__edge`.
+- Files changed: `apps/web/src/features/canvas/investigation-canvas.tsx`
+- **Learnings for future iterations:**
+  - This version of @xyflow/react does NOT have an `onPaneDoubleClick` prop — `onDoubleClick` is the only option, so you must guard it manually
+  - Use `(event.target as HTMLElement).closest('.react-flow__node')` to detect clicks on nodes within generic ReactFlow event handlers
+  - PRD technical notes may suggest APIs that don't exist in the installed version — always verify against the actual types
 ---
