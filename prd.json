@@ -1110,6 +1110,288 @@
         "Montar data/ em volume do host LXC para persistencia de dados fora do container",
         "Script wrapper one-liner: bash <(curl -fsSL https://raw.githubusercontent.com/<org>/fadenbrett/main/scripts/proxmox/install.sh)"
       ]
+    },
+    {
+      "id": "S030",
+      "title": "SEO e meta tags do index.html",
+      "phase": "Melhorias v2",
+      "priority": 30,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "O index.html atual tem <title>web</title>, usa o favicon padrao do Vite e nao possui nenhum meta tag de SEO, Open Graph ou Twitter Card. Isso impede previews ao compartilhar links e prejudica descoberta.",
+      "bugConfirmed": true,
+      "bugLocation": "apps/web/index.html:7",
+      "userStories": [
+        "Como usuario compartilhando o link do app, quero ver um preview rico (titulo, descricao, imagem) no WhatsApp/Discord/Slack.",
+        "Como administrador self-hosted, quero que o app apareca com nome correto na aba do browser e nos favoritos."
+      ],
+      "acceptance": [
+        "lang='pt-BR' na tag <html>",
+        "<title>Fadenbrett - Quadro de investigacao</title>",
+        "<meta name='description'> com tagline do produto",
+        "Open Graph tags: og:title, og:description, og:type (website)",
+        "Twitter card tags: twitter:card (summary), twitter:title, twitter:description",
+        "Favicon proprio em SVG (substituir /vite.svg - icone de fio/linha vermelha ou thread)",
+        "<meta name='theme-color' content='#1a1a1a'> para barra de status mobile",
+        "Nenhuma dependencia de CDN externo (tudo inline ou local)"
+      ],
+      "technicalNotes": [
+        "Criar apps/web/public/favicon.svg com icone simples de fio/barbante ou 'F' estilizado em vermelho (#b91c1c)",
+        "Substituir <link rel='icon' href='/vite.svg'> pelo novo favicon.svg",
+        "og:image pode apontar para screenshot estatico do board em /public/og-image.png",
+        "Manter tudo estatico no HTML - sem dependencia de SSR para meta tags"
+      ]
+    },
+    {
+      "id": "S031",
+      "title": "Substituir emojis por icones SVG na UI",
+      "phase": "Melhorias v2",
+      "priority": 31,
+      "priorityLabel": "P1",
+      "passes": false,
+      "description": "Varios elementos da UI usam emojis (luna, sol, quadrado amarelo, setas) que rendem de forma inconsistente entre sistemas operacionais, fontes e browsers. Substituir por icones SVG inline garante consistencia visual e alinhamento com o design system ja estabelecido.",
+      "bugConfirmed": true,
+      "bugLocation": "apps/web/src/App.tsx:160-162 e 249-252; apps/web/src/features/presentation/presentation-panel.tsx:54-65",
+      "userStories": [
+        "Como usuario no Windows, quero ver os mesmos icones que no Mac/Linux sem variacoes de cor e estilo entre fontes de emoji.",
+        "Como usuario, quero que os controles de tema e apresentacao sigam o mesmo visual coerente do restante da interface."
+      ],
+      "acceptance": [
+        "Botao tema 'dark': icone de lua crescente (Moon) SVG",
+        "Botao tema 'light': icone de sol (Sun) SVG",
+        "Botao tema 'custom': icone de chama ou paleta (Flame/Palette) SVG",
+        "Setas para cima/baixo no presentation-panel substituidas por icones ChevronUp/ChevronDown SVG",
+        "Botao x (remover stop) substituido por icone X SVG",
+        "Todos os icones SVG mantem consistencia de strokeWidth=2, tamanho 14-16px"
+      ],
+      "technicalNotes": [
+        "Nao adicionar biblioteca de icones externa (lucide-react etc.) - manter SVG inline como ja usado em todo o codebase",
+        "Moon: path com crescente geometrico; Sun: circulo + 8 raios; Flame: path organico",
+        "Icones no tema switcher devem ter title attribute para acessibilidade (ja existem)",
+        "Manter o label textual visivel no desktop ou usar apenas icone com tooltip"
+      ]
+    },
+    {
+      "id": "S032",
+      "title": "Fix: conflito de double-click (criar card + editar card)",
+      "phase": "Melhorias v2",
+      "priority": 32,
+      "priorityLabel": "P0",
+      "passes": false,
+      "description": "O ReactFlow recebe onDoubleClick={onPaneDoubleClick} que captura TODOS os double-clicks inclusive sobre nodes. Quando o usuario da double-click em um card, disparam simultaneamente onNodeDoubleClick (abre form de edicao) e onDoubleClick (abre form de criacao). Resultado: dois modais abertos ou conflito de estado.",
+      "bugConfirmed": true,
+      "bugLocation": "apps/web/src/features/canvas/investigation-canvas.tsx:610",
+      "currentCode": "onDoubleClick={onPaneDoubleClick}",
+      "fix": "Trocar onDoubleClick por onPaneDoubleClick - prop especifica do ReactFlow que so dispara em double-click no fundo do canvas, nao em nodes/edges.",
+      "userStories": [
+        "Como usuario, quero que double-click no fundo do canvas crie um novo card (sem Shift) ou uma nota (com Shift).",
+        "Como usuario, quero que double-click em um card existente abra o formulario de edicao - sem abrir tambem o de criacao."
+      ],
+      "acceptance": [
+        "Double-click no fundo (pane) sem Shift: abre form de criacao de card",
+        "Double-click no fundo (pane) com Shift: cria nota diretamente",
+        "Double-click em card existente: abre form de edicao desse card, sem abrir form de criacao",
+        "Double-click em note: inicia edicao inline da nota (comportamento atual correto)",
+        "Double-click em edge: abre form de edicao da conexao (comportamento atual correto)",
+        "Nenhum modal duplo ou conflito de estado"
+      ],
+      "technicalNotes": [
+        "Substituir onDoubleClick por onPaneDoubleClick no componente <ReactFlow>",
+        "@xyflow/react expoe onPaneDoubleClick com a mesma assinatura (event: React.MouseEvent)"
+      ]
+    },
+    {
+      "id": "S033",
+      "title": "Fix: badge 'Salvo HH:MM' sobrepondo controles do canvas",
+      "phase": "Melhorias v2",
+      "priority": 33,
+      "priorityLabel": "P1",
+      "passes": false,
+      "description": "O badge de status de salvamento esta posicionado em bottom-3 left-3 no desktop, mesma regiao onde o ReactFlow Controls renderiza por padrao (bottom-left). No mobile ja esta em bottom-16 para evitar sobreposicao, mas no desktop (sm:bottom-3) conflita com os botoes de zoom/fit do Controls.",
+      "bugConfirmed": true,
+      "bugLocation": "apps/web/src/features/canvas/investigation-canvas.tsx:598",
+      "userStories": [
+        "Como usuario, quero ver o status de salvamento sem que ele tape os botoes de controle do canvas."
+      ],
+      "acceptance": [
+        "Badge nao sobrepoe os botoes Controls (zoom in/out/fit) em nenhuma breakpoint",
+        "Badge visivel e legivel em desktop e mobile",
+        "Posicao consistente mesmo com sidebar aberta"
+      ],
+      "technicalNotes": [
+        "Opcao A (preferida): mover badge para bottom-right acima do MiniMap - bottom-3 right-3 quando MiniMap oculto (mobile), bottom-40 right-3 quando visivel (sm+)",
+        "Opcao B: posicionar acima dos Controls - bottom-28 left-3 (Controls tem altura ~100px)",
+        "Opcao C: incluir badge dentro do ExportToolbar como item adicional"
+      ]
+    },
+    {
+      "id": "S034",
+      "title": "Fix: apresentacao mostra 'Card sem titulo' em vez do titulo real",
+      "phase": "Melhorias v2",
+      "priority": 34,
+      "priorityLabel": "P0",
+      "passes": false,
+      "description": "A funcao getNodeLabel() em presentation-panel.tsx usa node.data.name para cards, mas a interface CardData armazena o titulo em node.data.title. O campo 'name' nao existe no schema - resulta em undefined, caindo no fallback 'Card sem titulo' para todos os cards.",
+      "bugConfirmed": true,
+      "bugLocation": "apps/web/src/features/presentation/presentation-panel.tsx:6",
+      "currentCode": "return String(node.data.name ?? 'Card sem titulo')",
+      "fix": "return String(node.data.title ?? 'Card sem titulo')",
+      "userStories": [
+        "Como usuario, quero ver o nome correto do card/nota/frame na lista de paradas da apresentacao.",
+        "Como usuario, quero poder renomear uma parada individualmente para dar contexto narrativo sem alterar o card."
+      ],
+      "acceptance": [
+        "Cards mostram seu campo title correto na lista de paradas",
+        "Notes mostram os primeiros 40 caracteres do content (ja correto)",
+        "Frames mostram seu campo title (ja correto)",
+        "Bonus: campo de edicao inline do label da parada - clique na parada para renomear sem alterar o node original"
+      ],
+      "technicalNotes": [
+        "Fix imediato: node.data.name -> node.data.title na linha 6",
+        "Renomear parada inline: adicionar estado local editingStopId + input controlado; chamar store action updatePresentationStopLabel(id, label)",
+        "PresentationStop type ja tem campo label?: string - basta implementar a action updatePresentationStopLabel no store"
+      ]
+    },
+    {
+      "id": "S035",
+      "title": "Conexoes v2: tipo de rota, curvatura ajustavel e handle arrastavel",
+      "phase": "Melhorias v2",
+      "priority": 35,
+      "priorityLabel": "P1",
+      "passes": false,
+      "description": "As conexoes atuais sao beziers fixas com curvatura 0.3, sem possibilidade de ajuste. O usuario nao consegue tornar as conexoes retas, mais curvadas, em angulos retos, ou criar pontos de controle para desviar de outros elementos. Esta historia adiciona controle visual e editabilidade das arestas.",
+      "userStories": [
+        "Como usuario, quero ajustar a curvatura de uma conexao para que ela desvie visualmente de outros cards.",
+        "Como usuario, quero escolher entre conexao curva (bezier), reta ou em angulo reto (step) para diferentes tipos de relacao.",
+        "Como usuario, quero arrastar o ponto medio de uma conexao para reposiciona-la sem abrir o formulario."
+      ],
+      "acceptance": [
+        "Formulario de conexao tem seletor de 'Tipo de rota': Bezier (padrao), Reta, Angulo reto (Step)",
+        "Formulario tem slider de 'Curvatura' (0.0 a 1.0) visivel apenas para tipo Bezier",
+        "Ao selecionar uma conexao, aparece um handle arrastavel no ponto medio da curva para ajuste visual",
+        "Arrastar o handle atualiza o offset de curvatura em tempo real com debounce para persistencia",
+        "Conexoes do tipo 'step' renderizam com cantos em 90 graus (getSmoothStepPath do React Flow)",
+        "Conexoes do tipo 'straight' renderizam retas (getStraightPath)",
+        "Dados persistidos: connectionData inclui routeType e curvature"
+      ],
+      "technicalNotes": [
+        "Adicionar routeType: 'bezier' | 'straight' | 'step' e curvature: number (0-1, default 0.3) ao tipo ConnectionData",
+        "YarnEdge: escolher entre getBezierPath, getStraightPath, getSmoothStepPath com base em routeType",
+        "Handle de curvatura: renderizar via EdgeLabelRenderer um ponto draggable no midpoint; onMouseDown + onMouseMove calcula delta e atualiza curvature no store via updateConnection debounced",
+        "O handle de curvatura so aparece quando edge esta selecionado (selected === true)",
+        "getSmoothStepPath aceita borderRadius para cantos suavizados - usar borderRadius: 8",
+        "Atualizar ConnectionForm com novo seletor de routeType e slider de curvature (input range 0-100 mapeado para 0.0-1.0)"
+      ]
+    },
+    {
+      "id": "S036",
+      "title": "Copy/Paste de nodes no canvas",
+      "phase": "Melhorias v2",
+      "priority": 36,
+      "priorityLabel": "P1",
+      "passes": false,
+      "description": "Nao existe forma de duplicar cards, notas ou grupos. O usuario precisa criar tudo do zero mesmo quando quer reutilizar uma estrutura similar. Ctrl+C / Ctrl+V e opcao no menu contextual devem permitir duplicacao.",
+      "userStories": [
+        "Como usuario, quero copiar um card e colar em outra posicao do canvas para criar variacoes sem redigitar.",
+        "Como usuario, quero duplicar multiplos nodes selecionados de uma vez mantendo as proporcoes relativas."
+      ],
+      "acceptance": [
+        "Ctrl+C (ou Cmd+C) copia os nodes selecionados para um clipboard interno",
+        "Ctrl+V (ou Cmd+V) cola com offset de +40px x/y em relacao ao original",
+        "Menu contextual em node mostra 'Duplicar' que equivale a Ctrl+C + Ctrl+V imediato",
+        "Paste de multiplos nodes preserva posicoes relativas entre eles",
+        "Conexoes entre nodes copiados sao recriadas no grupo colado",
+        "IDs novos gerados para todos os elementos colados",
+        "Acao registrada no historico de undo/redo"
+      ],
+      "technicalNotes": [
+        "Clipboard interno: array de Node[] + Edge[] na memoria (nao usar clipboard do sistema - evita permissoes)",
+        "duplicateNodes(ids: string[]) action no store: clona nodes com novos UUIDs, adiciona offset, recria edges internas",
+        "Keyboard handler no onKeyDown: 'c' + ctrl -> setCopiedNodes(selectedNodes, selectedEdges); 'v' + ctrl -> duplicateNodes",
+        "Offset para evitar sobreposicao exata: { x: node.position.x + 40, y: node.position.y + 40 }",
+        "Selecionar automaticamente os nodes colados apos o paste"
+      ]
+    },
+    {
+      "id": "S037",
+      "title": "Overlay de ajuda com atalhos de teclado",
+      "phase": "Melhorias v2",
+      "priority": 37,
+      "priorityLabel": "P2",
+      "passes": false,
+      "description": "O app tem varios atalhos de teclado (Ctrl+Z, Delete, Ctrl+S, +/-, 0, Shift+double-click) mas nenhuma documentacao acessivel na propria interface. Um overlay acionado por '?' ou botao de ajuda resolve a descobribilidade.",
+      "userStories": [
+        "Como usuario novo, quero descobrir os atalhos de teclado disponiveis sem precisar ler documentacao externa.",
+        "Como usuario frequente, quero uma referencia rapida de atalhos acessivel sem sair do app."
+      ],
+      "acceptance": [
+        "Pressionar '?' (quando nao editando texto) abre o overlay de atalhos",
+        "Botao '?' no header ou nos controles do canvas abre o mesmo overlay",
+        "Overlay lista todos os atalhos em duas colunas: acao + tecla",
+        "Overlay fechavel com Escape ou clique fora",
+        "Secoes: Navegacao, Edicao, Selecao, Apresentacao"
+      ],
+      "technicalNotes": [
+        "Componente ShortcutsOverlay modal simples com grid de 2 colunas",
+        "Atalhos definidos como array de { action: string, keys: string[] } - nao duplicar logica do handler",
+        "Adicionar '?' ao onKeyDown handler do canvas: event.key === '?' && !isEditing -> setShortcutsOpen(true)",
+        "Renderizar <kbd> tags para cada tecla com styling monoespacao"
+      ]
+    },
+    {
+      "id": "S038",
+      "title": "Personalizacao de board: descricao e cor de identificacao",
+      "phase": "Melhorias v2",
+      "priority": 38,
+      "priorityLabel": "P2",
+      "passes": false,
+      "description": "Boards atualmente tem apenas nome. Adicionar descricao curta e cor de identificacao visual permite organizar multiplos boards por temporada/arco de forma mais intuitiva na sidebar.",
+      "userStories": [
+        "Como usuario com multiplos boards, quero ver cores diferentes para identificar rapidamente 'Temporada 1', 'Temporada 2' etc.",
+        "Como usuario, quero adicionar uma descricao ao board para lembrar o contexto sem abrir o board."
+      ],
+      "acceptance": [
+        "Ao criar ou editar um board, formulario inclui campo de descricao (textarea, max 200 chars)",
+        "Formulario inclui seletor de cor (6-8 opcoes: vermelho, azul, verde, roxo, ambar, teal, rosa, cinza)",
+        "Sidebar mostra uma barra colorida a esquerda de cada board item indicando a cor escolhida",
+        "Board ativo no header mostra um ponto colorido ao lado do nome",
+        "Descricao visivel como tooltip ou linha secundaria na sidebar",
+        "Dados (description, color) persistidos no backend via PATCH /boards/:id"
+      ],
+      "technicalNotes": [
+        "Adicionar description?: string e color?: string ao tipo BoardEntry no store",
+        "Substituir prompt() atual no BoardSidebar por modal dedicado com nome, descricao e seletor de cor",
+        "BOARD_COLORS: array de 8 hex colors alinhados com a paleta investigativa do PRD",
+        "API: PATCH /boards/:id ja existente - adicionar campos description e color ao schema Drizzle e Zod"
+      ]
+    },
+    {
+      "id": "S039",
+      "title": "Setas direcionais e tipos de relacao predefinidos nas conexoes",
+      "phase": "Melhorias v2",
+      "priority": 39,
+      "priorityLabel": "P2",
+      "passes": false,
+      "description": "Conexoes atuais nao tem seta de direcao visivel nem tipo de relacao predefinido. Para investigacao narrativa, saber qual a direcao (A para B) e o tipo (familia, suspeito, aliado) e critico para entender o grafo.",
+      "userStories": [
+        "Como usuario, quero ver setas direcionais nas conexoes para entender quem influencia quem.",
+        "Como usuario, quero escolher se a conexao e unidirecional, bidirecional ou sem direcao.",
+        "Como usuario, quero selecionar um tipo de relacao predefinido (Familia, Romance, Suspeito) que preencha cor e label automaticamente."
+      ],
+      "acceptance": [
+        "Formulario de conexao inclui seletor de 'Direcao': Nenhuma, A para B, B para A, Bidirecional",
+        "Edge renderiza arrowhead na(s) ponta(s) configurada(s) com a mesma cor da linha",
+        "Padrao: sem direcao (compativel com conexoes existentes)",
+        "Tipos de relacao predefinidos: Familia, Romance, Suspeito, Aliado, Inimigo, Desconhecido",
+        "Escolher um tipo preenche automaticamente label e cor sugerida (editavel pelo usuario)"
+      ],
+      "technicalNotes": [
+        "Adicionar direction: 'none' | 'forward' | 'backward' | 'both' e relationType?: string ao ConnectionData",
+        "React Flow suporta markerEnd e markerStart nas edges para setas - usar MarkerType.ArrowClosed do @xyflow/react",
+        "RELATION_TYPES: array de { id, label, defaultColor, defaultStyle } com os tipos predefinidos",
+        "Ao selecionar relationType no form, preencher label e color com os defaults do tipo (se ainda nao editados pelo usuario)",
+        "Backward: usar markerStart em vez de markerEnd; Both: usar ambos"
+      ]
     }
   ]
 }

@@ -493,3 +493,19 @@
   - `features: nesting=1` is required to run Docker inside an unprivileged LXC
   - Systemd unit inside LXC with `WorkingDirectory` + `ExecStart=docker compose up` is simpler than using Docker restart policies alone (handles LXC reboot)
 ---
+
+## 2026-03-07 - S030
+- What was implemented: SEO and meta tags for index.html
+  - Set `lang="pt-BR"` on `<html>`
+  - Updated `<title>` to "Fadenbrett - Quadro de investigacao"
+  - Added `<meta name="description">` with product tagline
+  - Added Open Graph tags (og:type, og:title, og:description)
+  - Added Twitter Card tags (summary card)
+  - Added `<meta name="theme-color" content="#1a1a1a">`
+  - Created custom favicon.svg (red thread/pin icon) replacing vite.svg
+- Files changed: `apps/web/index.html`, `apps/web/public/favicon.svg` (new), `apps/web/public/vite.svg` (deleted)
+- **Learnings for future iterations:**
+  - index.html is at `apps/web/index.html` — static meta tags go here, no SSR needed
+  - Favicon lives in `apps/web/public/` — Vite serves files from public/ at root
+  - `pnpm install` may be needed if node_modules is missing (check before running quality checks)
+---
