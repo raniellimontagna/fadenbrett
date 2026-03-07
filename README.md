@@ -11,6 +11,10 @@ Quadro de investigação digital interativo, self-hosted e open-source. Inspirad
 
 ---
 
+![Fadenbrett — quadro Dark](docs/screenshot.png)
+
+---
+
 ## Features
 
 - **Canvas infinito** com cards de personagens, post-its e conexões semânticas
