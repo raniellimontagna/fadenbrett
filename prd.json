@@ -1148,7 +1148,7 @@
       "phase": "Melhorias v2",
       "priority": 31,
       "priorityLabel": "P1",
-      "passes": false,
+      "passes": true,
       "description": "Varios elementos da UI usam emojis (luna, sol, quadrado amarelo, setas) que rendem de forma inconsistente entre sistemas operacionais, fontes e browsers. Substituir por icones SVG inline garante consistencia visual e alinhamento com o design system ja estabelecido.",
       "bugConfirmed": true,
       "bugLocation": "apps/web/src/App.tsx:160-162 e 249-252; apps/web/src/features/presentation/presentation-panel.tsx:54-65",

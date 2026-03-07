@@ -509,3 +509,15 @@
   - Favicon lives in `apps/web/public/` — Vite serves files from public/ at root
   - `pnpm install` may be needed if node_modules is missing (check before running quality checks)
 ---
+--- Iteration 1 completed at sáb 07 mar 2026 20:30:30 -03 ---
+
+## 2026-03-07 - S031
+- Replaced emoji icons in theme switcher (Moon, Sun, Flame SVGs) in both desktop and mobile menus in App.tsx
+- Replaced text arrows (up/down) and x in presentation-panel.tsx with ChevronUp, ChevronDown, X SVG icons
+- All SVG icons use consistent strokeWidth=2, size h-3.5 w-3.5 (14px)
+- Files changed: apps/web/src/App.tsx, apps/web/src/features/presentation/presentation-panel.tsx
+- **Learnings for future iterations:**
+  - Theme switcher buttons appear in TWO places in App.tsx: desktop toolbar (~line 160) and mobile menu (~line 250) - both must be updated together
+  - Inline SVG icons follow Lucide icon conventions: viewBox="0 0 24 24", fill="none", stroke="currentColor", strokeWidth={2}, strokeLinecap="round", strokeLinejoin="round"
+  - When editing duplicate markup in App.tsx, use unique surrounding context to differentiate the desktop vs mobile instances
+---
