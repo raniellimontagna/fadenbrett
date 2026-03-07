@@ -10,7 +10,6 @@
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "pretest": "pnpm rebuild better-sqlite3",
     "test": "vitest run"
   },
   "dependencies": {
@@ -18,7 +17,7 @@
     "@fastify/multipart": "^8.3.0",
     "@fastify/static": "^7.0.4",
     "@fastify/websocket": "^10.0.1",
-    "better-sqlite3": "^9.4.3",
+    "better-sqlite3": "^11.0.0",
     "drizzle-orm": "^0.30.10",
     "fastify": "^4.27.0",
     "zod": "^3.23.4"

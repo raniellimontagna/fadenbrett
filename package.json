@@ -10,5 +10,8 @@
     "lint": "pnpm --filter @fadenbrett/web lint",
     "type-check": "pnpm --filter @fadenbrett/web type-check && pnpm --filter @fadenbrett/api type-check",
     "test": "pnpm --filter @fadenbrett/api test"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3"]
   }
 }
