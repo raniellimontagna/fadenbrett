@@ -532,3 +532,12 @@
   - Use `(event.target as HTMLElement).closest('.react-flow__node')` to detect clicks on nodes within generic ReactFlow event handlers
   - PRD technical notes may suggest APIs that don't exist in the installed version — always verify against the actual types
 ---
+--- Iteration 3 completed at sáb 07 mar 2026 20:34:49 -03 ---
+
+## 2026-03-07 - S033
+- What was implemented: Moved save status badge from bottom-left to bottom-right to avoid overlapping ReactFlow Controls
+- Files changed: apps/web/src/features/canvas/investigation-canvas.tsx
+- **Learnings for future iterations:**
+  - ReactFlow Controls render bottom-left by default; avoid placing custom overlays there
+  - MiniMap is hidden on mobile (!hidden sm:!block), so badge uses bottom-3 on mobile, sm:bottom-40 on desktop to clear MiniMap
+---

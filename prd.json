@@ -1206,7 +1206,7 @@
       "phase": "Melhorias v2",
       "priority": 33,
       "priorityLabel": "P1",
-      "passes": false,
+      "passes": true,
       "description": "O badge de status de salvamento esta posicionado em bottom-3 left-3 no desktop, mesma regiao onde o ReactFlow Controls renderiza por padrao (bottom-left). No mobile ja esta em bottom-16 para evitar sobreposicao, mas no desktop (sm:bottom-3) conflita com os botoes de zoom/fit do Controls.",
       "bugConfirmed": true,
       "bugLocation": "apps/web/src/features/canvas/investigation-canvas.tsx:598",
