@@ -7,6 +7,7 @@ import { BoardSidebar } from './features/canvas/board-sidebar'
 import { PresentationPanel } from './features/presentation/presentation-panel'
 import { PresenceBar } from './features/collab/presence-bar'
 import { TemplateGallery } from './features/templates/template-gallery'
+import { ShortcutsOverlay } from './features/canvas/shortcuts-overlay'
 import { useBoardStore } from './store/board-store'
 
 type ViewMode = 'canvas' | 'timeline'
@@ -17,6 +18,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [presentationPanelOpen, setPresentationPanelOpen] = useState(false)
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   const applyTemplate = useBoardStore((s) => s.applyTemplate)
   const loadBoards = useBoardStore((s) => s.loadBoards)
@@ -24,6 +26,16 @@ export default function App() {
   const apiError = useBoardStore((s) => s.apiError)
 
   useEffect(() => { void loadBoards() }, [loadBoards])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (e.key === '?') setShortcutsOpen((p) => !p)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   const boards = useBoardStore((s) => s.boards)
   const activeBoardId = useBoardStore((s) => s.activeBoardId)
@@ -195,6 +207,18 @@ export default function App() {
               </svg>
               Templates
             </button>
+
+            {/* Help / shortcuts */}
+            <button
+              onClick={() => setShortcutsOpen(true)}
+              className="flex items-center justify-center rounded-lg px-1.5 py-1 text-xs font-medium text-fadenbrett-muted transition-colors hover:bg-fadenbrett-muted/10 hover:text-fadenbrett-text"
+              title="Atalhos de teclado (?)"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+              </svg>
+            </button>
           </div>
 
           {/* Mobile compact controls */}
@@ -290,6 +314,18 @@ export default function App() {
               </svg>
               Templates
             </button>
+
+            {/* Help / shortcuts */}
+            <button
+              onClick={() => { setShortcutsOpen(true); setMobileMenuOpen(false) }}
+              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-fadenbrett-muted transition-colors hover:bg-fadenbrett-muted/10 hover:text-fadenbrett-text"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+              </svg>
+              Atalhos
+            </button>
           </div>
         )}
       </header>
@@ -350,6 +386,11 @@ export default function App() {
           }}
           onClose={() => setTemplateGalleryOpen(false)}
         />
+      )}
+
+      {/* Shortcuts overlay */}
+      {shortcutsOpen && (
+        <ShortcutsOverlay onClose={() => setShortcutsOpen(false)} />
       )}
     </div>
   )
