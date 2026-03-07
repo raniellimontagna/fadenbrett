@@ -1258,7 +1258,7 @@
       "phase": "Melhorias v2",
       "priority": 35,
       "priorityLabel": "P1",
-      "passes": false,
+      "passes": true,
       "description": "As conexoes atuais sao beziers fixas com curvatura 0.3, sem possibilidade de ajuste. O usuario nao consegue tornar as conexoes retas, mais curvadas, em angulos retos, ou criar pontos de controle para desviar de outros elementos. Esta historia adiciona controle visual e editabilidade das arestas.",
       "userStories": [
         "Como usuario, quero ajustar a curvatura de uma conexao para que ela desvie visualmente de outros cards.",
