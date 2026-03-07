@@ -569,3 +569,22 @@
   - Edge data from templates may not have new fields — spread DEFAULT_CONNECTION_DATA as fallback in edge component
   - Pointer events on EdgeLabelRenderer divs need `pointer-events-auto` class to be interactive
 ---
+--- Iteration 6 completed at sáb 07 mar 2026 20:43:39 -03 ---
+
+## 2026-03-07 - S036
+- What was implemented: Copy/Paste de nodes no canvas
+  - Added internal clipboard state (`clipboard: { nodes, edges } | null`) and `copySelected`, `pasteClipboard`, `duplicateNodes` actions to `board-store.ts`
+  - Ctrl+C copies selected nodes + internal edges; Ctrl+V pastes with +40px offset and new IDs
+  - "Duplicar" context menu option on card, note, frame, and selection targets (equivalent to immediate copy+paste)
+  - Pasted nodes are auto-selected; original nodes deselected
+  - Connections between copied nodes are recreated in the pasted group
+  - All paste/duplicate operations push to undo history
+- Files changed:
+  - `apps/web/src/store/board-store.ts` (clipboard state + 3 new actions)
+  - `apps/web/src/features/canvas/investigation-canvas.tsx` (keyboard handlers + onDuplicate prop)
+  - `apps/web/src/features/canvas/context-menu.tsx` (Duplicar menu items + onDuplicate prop)
+- **Learnings for future iterations:**
+  - Store actions that clone nodes must map old IDs to new IDs (idMap) and update both `node.id` and `node.data.id` since components read data.id
+  - When duplicating nodes with parentId (frames), only remap parentId if the parent is also in the duplicated set
+  - Context menu `handleAction` already calls `onClose`, so the onDuplicate wrapper in investigation-canvas also calls closeContextMenu redundantly — harmless but worth noting
+---

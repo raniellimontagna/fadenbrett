@@ -1289,7 +1289,7 @@
       "phase": "Melhorias v2",
       "priority": 36,
       "priorityLabel": "P1",
-      "passes": false,
+      "passes": true,
       "description": "Nao existe forma de duplicar cards, notas ou grupos. O usuario precisa criar tudo do zero mesmo quando quer reutilizar uma estrutura similar. Ctrl+C / Ctrl+V e opcao no menu contextual devem permitir duplicacao.",
       "userStories": [
         "Como usuario, quero copiar um card e colar em outra posicao do canvas para criar variacoes sem redigitar.",
