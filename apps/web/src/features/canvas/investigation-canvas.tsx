@@ -599,7 +599,7 @@ export function InvestigationCanvas() {
       )}
 
       {/* Save status */}
-      <div className="pointer-events-none absolute bottom-16 left-3 z-10 flex items-center gap-1.5 rounded-md bg-fadenbrett-surface/70 px-2 py-1 text-[10px] text-fadenbrett-muted backdrop-blur-sm sm:bottom-3">
+      <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-md bg-fadenbrett-surface/70 px-2 py-1 text-[10px] text-fadenbrett-muted backdrop-blur-sm sm:bottom-40">
         <span className={`h-1.5 w-1.5 rounded-full ${lastSavedAt ? 'bg-green-500' : 'bg-fadenbrett-muted/40'}`} />
         {savedLabel}
       </div>
