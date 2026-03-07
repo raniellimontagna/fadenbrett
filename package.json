@@ -1,0 +1,14 @@
+{
+  "name": "fadenbrett",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @fadenbrett/web dev",
+    "dev:api": "pnpm --filter @fadenbrett/api dev",
+    "build": "pnpm --filter @fadenbrett/web build && pnpm --filter @fadenbrett/api build",
+    "build:web": "pnpm --filter @fadenbrett/web build",
+    "build:api": "pnpm --filter @fadenbrett/api build",
+    "lint": "pnpm --filter @fadenbrett/web lint",
+    "type-check": "pnpm --filter @fadenbrett/web type-check && pnpm --filter @fadenbrett/api type-check",
+    "test": "pnpm --filter @fadenbrett/api test"
+  }
+}

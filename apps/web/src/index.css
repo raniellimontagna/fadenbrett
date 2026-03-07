@@ -1,0 +1,53 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+@theme {
+  --color-fadenbrett-bg: #1a1a1a;
+  --color-fadenbrett-surface: #2a2a2a;
+  --color-fadenbrett-accent: #b91c1c;
+  --color-fadenbrett-text: #e5e5e5;
+  --color-fadenbrett-muted: #737373;
+}
+
+/* ── Theme overrides ───────────────────────────────────────────────────────── */
+
+[data-theme="dark"] {
+  --color-fadenbrett-bg: #1a1a1a;
+  --color-fadenbrett-surface: #2a2a2a;
+  --color-fadenbrett-accent: #b91c1c;
+  --color-fadenbrett-text: #e5e5e5;
+  --color-fadenbrett-muted: #737373;
+}
+
+[data-theme="light"] {
+  --color-fadenbrett-bg: #f0f0ee;
+  --color-fadenbrett-surface: #ffffff;
+  --color-fadenbrett-accent: #b91c1c;
+  --color-fadenbrett-text: #1c1c1c;
+  --color-fadenbrett-muted: #6b6b6b;
+}
+
+[data-theme="custom"] {
+  --color-fadenbrett-bg: #1e1b14;
+  --color-fadenbrett-surface: #2d2820;
+  --color-fadenbrett-accent: #d97706;
+  --color-fadenbrett-text: #e8d5b7;
+  --color-fadenbrett-muted: #a08060;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--color-fadenbrett-bg);
+  color: var(--color-fadenbrett-text);
+}
+
+.react-flow__background {
+  background-color: var(--color-fadenbrett-bg) !important;
+}
