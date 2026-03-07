@@ -54,7 +54,7 @@ export function PresentationPanel() {
                   className="rounded p-0.5 text-fadenbrett-muted hover:text-fadenbrett-text disabled:opacity-30"
                   title="Mover para cima"
                 >
-                  ↑
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
                 </button>
                 <button
                   onClick={() => movePresentationStop(stop.id, 'down')}
@@ -62,14 +62,14 @@ export function PresentationPanel() {
                   className="rounded p-0.5 text-fadenbrett-muted hover:text-fadenbrett-text disabled:opacity-30"
                   title="Mover para baixo"
                 >
-                  ↓
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                 </button>
                 <button
                   onClick={() => removePresentationStop(stop.id)}
                   className="rounded p-0.5 text-fadenbrett-muted hover:text-red-400"
                   title="Remover"
                 >
-                  ×
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
               </div>
             </li>
