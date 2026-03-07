@@ -251,6 +251,10 @@ export function InvestigationCanvas() {
 
   const onPaneDoubleClick = useCallback(
     (event: React.MouseEvent) => {
+      // Ignore double-clicks on nodes/edges — those are handled by onNodeDoubleClick/onEdgeDoubleClick
+      const target = event.target as HTMLElement
+      if (target.closest('.react-flow__node') || target.closest('.react-flow__edge')) return
+
       const position = screenToFlowPosition({ x: event.clientX, y: event.clientY })
       if (event.shiftKey) {
         addNote(position)
