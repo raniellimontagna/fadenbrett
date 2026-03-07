@@ -541,3 +541,15 @@
   - ReactFlow Controls render bottom-left by default; avoid placing custom overlays there
   - MiniMap is hidden on mobile (!hidden sm:!block), so badge uses bottom-3 on mobile, sm:bottom-40 on desktop to clear MiniMap
 ---
+--- Iteration 4 completed at sáb 07 mar 2026 20:36:27 -03 ---
+
+## 2026-03-07 - S034
+- Fixed `getNodeLabel()` in presentation-panel.tsx: changed `node.data.name` to `node.data.title` for cards
+- Added `updatePresentationStopLabel` store action in board-store.ts
+- Added inline double-click editing for presentation stop labels in the panel
+- Files changed: `apps/web/src/features/presentation/presentation-panel.tsx`, `apps/web/src/store/board-store.ts`
+- **Learnings for future iterations:**
+  - CardData stores title in `data.title`, not `data.name` — always check the actual type interface
+  - PresentationStop already has `label?: string` field for custom overrides
+  - `lsSet`/`lsGet` helpers are used for lightweight persistence of presentation stops in localStorage
+---

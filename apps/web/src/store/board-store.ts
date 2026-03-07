@@ -198,6 +198,7 @@ export interface BoardState {
   addPresentationStop: (nodeId: string, label?: string) => void
   removePresentationStop: (stopId: string) => void
   movePresentationStop: (stopId: string, direction: 'up' | 'down') => void
+  updatePresentationStopLabel: (stopId: string, label: string) => void
   startPresentation: () => void
   exitPresentation: () => void
   nextStop: () => void
@@ -582,6 +583,14 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     ;[stops[idx], stops[newIdx]] = [stops[newIdx], stops[idx]]
     set({ presentationStops: stops })
     lsSet('fadenbrett-presentation', stops)
+  },
+
+  updatePresentationStopLabel: (stopId, label) => {
+    const next = get().presentationStops.map((s) =>
+      s.id === stopId ? { ...s, label: label || undefined } : s,
+    )
+    set({ presentationStops: next })
+    lsSet('fadenbrett-presentation', next)
   },
 
   startPresentation: () => {

@@ -1230,7 +1230,7 @@
       "phase": "Melhorias v2",
       "priority": 34,
       "priorityLabel": "P0",
-      "passes": false,
+      "passes": true,
       "description": "A funcao getNodeLabel() em presentation-panel.tsx usa node.data.name para cards, mas a interface CardData armazena o titulo em node.data.title. O campo 'name' nao existe no schema - resulta em undefined, caindo no fallback 'Card sem titulo' para todos os cards.",
       "bugConfirmed": true,
       "bugLocation": "apps/web/src/features/presentation/presentation-panel.tsx:6",
