@@ -72,6 +72,9 @@ export function InvestigationCanvas() {
     redo,
     addPresentationStop,
     presentationActive,
+    copySelected,
+    pasteClipboard,
+    duplicateNodes,
   } = useBoardStore()
   const { zoomIn, zoomOut, fitView, screenToFlowPosition } = useReactFlow()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -540,11 +543,17 @@ export function InvestigationCanvas() {
       ) {
         event.preventDefault()
         redo()
+      } else if (event.key === 'c' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        copySelected()
+      } else if (event.key === 'v' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        pasteClipboard()
       } else if (event.key === 'Escape') {
         closeContextMenu()
       }
     },
-    [zoomIn, zoomOut, fitView, selectedNodes, selectedEdges, performDelete, closeContextMenu, saveNow, undo, redo],
+    [zoomIn, zoomOut, fitView, selectedNodes, selectedEdges, performDelete, closeContextMenu, saveNow, undo, redo, copySelected, pasteClipboard],
   )
 
   const confirmMessage = confirmDelete
@@ -674,6 +683,7 @@ export function InvestigationCanvas() {
           onDeleteItems={performDelete}
           onEditConnection={handleContextEditConnection}
           onAddToPresentation={handleContextAddToPresentation}
+          onDuplicate={(nodeIds) => { duplicateNodes(nodeIds); closeContextMenu() }}
         />
       )}
 

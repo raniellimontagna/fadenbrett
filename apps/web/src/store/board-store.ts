@@ -211,6 +211,11 @@ export interface BoardState {
   stopCollab: () => void
   sendCursorMove: (cursor: { x: number; y: number }) => void
   setLocalUserName: (name: string) => void
+  // Clipboard (copy/paste)
+  clipboard: { nodes: Node[]; edges: Edge[] } | null
+  copySelected: () => void
+  pasteClipboard: () => void
+  duplicateNodes: (nodeIds: string[]) => void
   // Templates
   applyTemplate: (name: string, nodes: Node[], edges: Edge[]) => void
 }
@@ -676,6 +681,72 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     set({ localUser: user })
     const { collaborating, activeBoardId } = get()
     if (collaborating) collabChannel.send({ type: 'presence', boardId: activeBoardId, user })
+  },
+
+  // --- Clipboard (copy/paste) ---
+  clipboard: null,
+
+  copySelected: () => {
+    const { nodes, edges } = get()
+    const selected = nodes.filter((n) => n.selected)
+    if (selected.length === 0) return
+    const selectedIds = new Set(selected.map((n) => n.id))
+    const internalEdges = edges.filter((e) => selectedIds.has(e.source) && selectedIds.has(e.target))
+    set({ clipboard: { nodes: selected, edges: internalEdges } })
+  },
+
+  pasteClipboard: () => {
+    const { clipboard } = get()
+    if (!clipboard || clipboard.nodes.length === 0) return
+    get().pushHistory()
+    const idMap = new Map<string, string>()
+    clipboard.nodes.forEach((n) => idMap.set(n.id, generateId()))
+    const newNodes: Node[] = clipboard.nodes.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      position: { x: n.position.x + 40, y: n.position.y + 40 },
+      selected: true,
+      data: { ...n.data, id: idMap.get(n.id)! },
+      ...(n.parentId && idMap.has(n.parentId) ? { parentId: idMap.get(n.parentId)! } : {}),
+    }))
+    const newEdges: Edge[] = clipboard.edges.map((e) => ({
+      ...e,
+      id: `e-${generateId()}`,
+      source: idMap.get(e.source) ?? e.source,
+      target: idMap.get(e.target) ?? e.target,
+    }))
+    // Deselect current nodes
+    const deselected = get().nodes.map((n) => (n.selected ? { ...n, selected: false } : n))
+    const deselectedEdges = get().edges.map((e) => (e.selected ? { ...e, selected: false } : e))
+    set({ nodes: [...deselected, ...newNodes], edges: [...deselectedEdges, ...newEdges] })
+  },
+
+  duplicateNodes: (nodeIds) => {
+    const { nodes, edges } = get()
+    const toDuplicate = nodes.filter((n) => nodeIds.includes(n.id))
+    if (toDuplicate.length === 0) return
+    const selectedIds = new Set(nodeIds)
+    const internalEdges = edges.filter((e) => selectedIds.has(e.source) && selectedIds.has(e.target))
+    get().pushHistory()
+    const idMap = new Map<string, string>()
+    toDuplicate.forEach((n) => idMap.set(n.id, generateId()))
+    const newNodes: Node[] = toDuplicate.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      position: { x: n.position.x + 40, y: n.position.y + 40 },
+      selected: true,
+      data: { ...n.data, id: idMap.get(n.id)! },
+      ...(n.parentId && idMap.has(n.parentId) ? { parentId: idMap.get(n.parentId)! } : {}),
+    }))
+    const newEdges: Edge[] = internalEdges.map((e) => ({
+      ...e,
+      id: `e-${generateId()}`,
+      source: idMap.get(e.source) ?? e.source,
+      target: idMap.get(e.target) ?? e.target,
+    }))
+    const deselected = nodes.map((n) => (n.selected ? { ...n, selected: false } : n))
+    const deselectedEdges = edges.map((e) => (e.selected ? { ...e, selected: false } : e))
+    set({ nodes: [...deselected, ...newNodes], edges: [...deselectedEdges, ...newEdges] })
   },
 
   applyTemplate: (name, nodes, edges) => {
