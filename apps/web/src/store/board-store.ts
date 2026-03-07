@@ -226,7 +226,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
       if (boards.length === 0) {
         // No boards on server yet — create default
-        const nb = await apiCreateBoard('Board 1', 'board-default')
+        const nb = await apiCreateBoard('Board 1')
         const entry = snapshotToBoard(nb, nb.id, nb.name)
         set({ apiStatus: 'connected', boards: { [entry.id]: entry }, activeBoardId: entry.id, nodes: entry.nodes, edges: entry.edges })
         lsSet('fadenbrett-active-board', entry.id)
