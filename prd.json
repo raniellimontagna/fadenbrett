@@ -1,0 +1,1115 @@
+{
+  "projectName": "Fadenbrett",
+  "tagline": "Siga o roter Faden. Conecte as pistas.",
+  "description": "Quadro de investigacao digital interativo, self-hosted e open-source, inspirado em paineis de detetive de filmes e series.",
+  "branchName": "feat/fadenbrett-v2",
+  "projectDir": ".",
+  "status": "in-progress",
+  "context": {
+    "problem": "Ferramentas genericas de diagrama nao resolvem bem investigacao narrativa com conexoes semanticas, contexto visual organico e uso offline/local.",
+    "nameOrigin": "Fadenbrett vem do alemao: Faden (fio, linha) + Brett (quadro/tabua). O nome referencia o roter Faden (fio condutor) e os fios vermelhos de quadros de investigacao, conectando diretamente a inspiracao em series alemas como Dark.",
+    "brandPositioning": "Como marca, Fadenbrett comunica investigacao visual guiada por conexoes: um quadro onde cada pista encontra seu fio condutor. O nome diferencia o produto por identidade cultural forte, memorabilidade e alinhamento direto com o caso de uso narrativo.",
+    "targetUsers": {
+      "primary": [
+        "Fas de series complexas (Dark, Lost, Severance, Westworld)",
+        "Usuarios que mapeiam personagens, eventos e teorias enquanto assistem"
+      ],
+      "secondary": [
+        "Escritores de ficcao",
+        "Mestres e jogadores de RPG",
+        "True crime enthusiasts",
+        "Pesquisadores que organizam informacao nao linear"
+      ]
+    },
+    "valueProposition": [
+      "Self-hosted por padrao: dados 100% locais, sem telemetria",
+      "UX focada em investigacao visual e descoberta de padroes",
+      "Canvas infinito com cards, post-its e conexoes semanticas",
+      "Open-source com extensibilidade para comunidade"
+    ],
+    "competitiveDifferentiators": [
+      {
+        "tool": "Miro",
+        "gap": "SaaS corporativo e menos focado em narrativa investigativa",
+        "differentiator": "Local-first, estilo investigativo e sem dependencia de nuvem"
+      },
+      {
+        "tool": "Obsidian Canvas",
+        "gap": "Excelente para notas, mas menos centrado em conexoes visuais ricas",
+        "differentiator": "Conexoes tipadas e filtros semanticos com dimming contextual"
+      },
+      {
+        "tool": "draw.io",
+        "gap": "Diagrama tecnico e menos imersivo para storytelling",
+        "differentiator": "Modelo orientado a personagens/eventos/teorias"
+      },
+      {
+        "tool": "DetectiveBoard.io",
+        "gap": "Menor flexibilidade para auto-hospedagem e customizacao",
+        "differentiator": "Open-source e arquitetura extensivel com Docker"
+      }
+    ]
+  },
+  "featureCatalog": {
+    "mvp": [
+      "Canvas infinito com pan e zoom",
+      "Cards de personagem/elemento",
+      "Post-its editaveis",
+      "Conexoes tipo yarn com labels e estilos",
+      "Filtros e camadas com dimming",
+      "Painel de detalhes com conexoes clicaveis",
+      "CRUD completo direto no canvas",
+      "Persistencia local com auto-save",
+      "Export de board em PNG/JPG"
+    ],
+    "future": [
+      "Timeline view",
+      "Multiplos boards por projeto",
+      "Colaboracao real-time",
+      "Templates prontos para series",
+      "Import/export JSON",
+      "Modo apresentacao",
+      "Busca global",
+      "Upload de imagens para cards",
+      "Tema dark/light/custom",
+      "Undo/Redo completo",
+      "Minimap",
+      "Agrupamento visual (clusters/frames)",
+      "Mobile touch/gestos"
+    ]
+  },
+  "technicalRequirements": {
+    "stackRecommendation": {
+      "frontend": "React 19 + TypeScript + Vite",
+      "canvasEngine": {
+        "selected": "React Flow",
+        "alternativesEvaluated": [
+          "Konva.js",
+          "Fabric.js",
+          "Excalidraw engine"
+        ],
+        "justification": [
+          "Melhor equilibrio entre produtividade, performance e extensibilidade para grafo visual",
+          "Modelo de nodes/edges acelera conexoes tipadas e painel de relacoes",
+          "Suporta custom nodes/edges para aparencia de fio/barbante"
+        ]
+      },
+      "stateManagement": "Zustand",
+      "styling": "Tailwind CSS",
+      "backend": "Node.js + Fastify",
+      "databaseDefault": "SQLite",
+      "databaseOptional": "PostgreSQL",
+      "orm": "Drizzle ORM",
+      "fileStorage": "Filesystem local",
+      "deploy": "Docker Compose",
+      "repositoryAndNaming": {
+        "slug": "fadenbrett",
+        "githubRepository": "github.com/<org>/fadenbrett",
+        "dockerImage": "fadenbrett",
+        "dockerComposeProjectName": "fadenbrett",
+        "dockerServiceName": "fadenbrett-app",
+        "dockerContainerName": "fadenbrett-app",
+        "packageNames": [
+          "@fadenbrett/web",
+          "@fadenbrett/api",
+          "@fadenbrett/shared"
+        ]
+      }
+    },
+    "nonFunctional": [
+      {
+        "id": "NFR-001",
+        "requirement": "Performance suave com 100+ cards e 200+ conexoes",
+        "target": "FPS medio >= 50 em maquina local de referencia"
+      },
+      {
+        "id": "NFR-002",
+        "requirement": "Carregamento inicial rapido",
+        "target": "< 2 segundos"
+      },
+      {
+        "id": "NFR-003",
+        "requirement": "Auto-save confiavel",
+        "target": "A cada 30s ou mudanca significativa"
+      },
+      {
+        "id": "NFR-004",
+        "requirement": "Offline",
+        "target": "Funcionar 100% offline apos carregamento inicial"
+      },
+      {
+        "id": "NFR-005",
+        "requirement": "Imagem Docker enxuta",
+        "target": "< 500MB"
+      },
+      {
+        "id": "NFR-006",
+        "requirement": "HTTPS",
+        "target": "Compatibilidade com reverse proxy (Traefik/Nginx)"
+      },
+      {
+        "id": "NFR-007",
+        "requirement": "Privacidade",
+        "target": "Zero telemetria e zero dependencia externa"
+      },
+      {
+        "id": "NFR-008",
+        "requirement": "Backup simplificado",
+        "target": "Copia da pasta de dados ou export JSON"
+      }
+    ]
+  },
+  "architecture": {
+    "frontendComponents": [
+      {
+        "name": "InvestigationCanvas",
+        "responsibility": "Renderizar cards, notes e conexoes em superficie infinita"
+      },
+      {
+        "name": "Toolbar",
+        "responsibility": "Acoes globais (criar, salvar, exportar, snap-grid)"
+      },
+      {
+        "name": "FilterBar",
+        "responsibility": "Filtros por tags, grupo, era e tipo de conexao"
+      },
+      {
+        "name": "DetailPanel",
+        "responsibility": "Detalhes expandidos e navegacao por relacoes"
+      },
+      {
+        "name": "Sidebar",
+        "responsibility": "Lista de boards e configuracoes de projeto"
+      },
+      {
+        "name": "ContextMenu",
+        "responsibility": "Acoes rapidas no clique direito"
+      }
+    ],
+    "api": {
+      "basePath": "/api/v1",
+      "resources": [
+        "boards",
+        "cards",
+        "notes",
+        "connections",
+        "tags",
+        "export"
+      ],
+      "endpoints": [
+        "GET /boards",
+        "POST /boards",
+        "GET /boards/:boardId",
+        "PATCH /boards/:boardId",
+        "DELETE /boards/:boardId",
+        "GET /boards/:boardId/cards",
+        "POST /boards/:boardId/cards",
+        "PATCH /cards/:cardId",
+        "DELETE /cards/:cardId",
+        "GET /boards/:boardId/notes",
+        "POST /boards/:boardId/notes",
+        "PATCH /notes/:noteId",
+        "DELETE /notes/:noteId",
+        "GET /boards/:boardId/connections",
+        "POST /boards/:boardId/connections",
+        "PATCH /connections/:connectionId",
+        "DELETE /connections/:connectionId",
+        "POST /boards/:boardId/autosave",
+        "GET /boards/:boardId/export?format=png&scale=2"
+      ]
+    },
+    "database": {
+      "tables": [
+        "boards",
+        "cards",
+        "notes",
+        "connections",
+        "tags",
+        "card_tags",
+        "note_tags"
+      ],
+      "keyFields": {
+        "boards": [
+          "id",
+          "name",
+          "description",
+          "theme",
+          "created_at",
+          "updated_at"
+        ],
+        "cards": [
+          "id",
+          "board_id",
+          "title",
+          "description",
+          "avatar_type",
+          "avatar_value",
+          "era_label",
+          "group_color",
+          "x",
+          "y",
+          "rotation",
+          "z_index",
+          "metadata_json"
+        ],
+        "notes": [
+          "id",
+          "board_id",
+          "content",
+          "color",
+          "x",
+          "y",
+          "rotation",
+          "z_index"
+        ],
+        "connections": [
+          "id",
+          "board_id",
+          "source_card_id",
+          "target_card_id",
+          "label",
+          "relation_type",
+          "style",
+          "color"
+        ]
+      }
+    },
+    "folderStructure": [
+      "apps/web/src/app",
+      "apps/web/src/features/canvas",
+      "apps/web/src/features/cards",
+      "apps/web/src/features/notes",
+      "apps/web/src/features/connections",
+      "apps/web/src/features/filters",
+      "apps/web/src/features/detail-panel",
+      "apps/web/src/store",
+      "apps/api/src/routes",
+      "apps/api/src/controllers",
+      "apps/api/src/services",
+      "apps/api/src/db/schema",
+      "apps/api/src/db/migrations",
+      "deploy/docker-compose.yml",
+      "data/sqlite",
+      "data/uploads"
+    ],
+    "mermaid": {
+      "frontendComponentDiagram": "flowchart LR\\n  Toolbar --> Canvas\\n  FilterBar --> Canvas\\n  Canvas --> DetailPanel\\n  Canvas --> ContextMenu\\n  Sidebar --> Canvas",
+      "dataFlowDiagram": "sequenceDiagram\\n  participant U as User\\n  participant FE as Frontend\\n  participant API as Fastify API\\n  participant DB as SQLite\\n  U->>FE: Edita card\\n  FE->>API: PATCH /cards/:id\\n  API->>DB: UPDATE cards\\n  DB-->>API: ok\\n  API-->>FE: 200",
+      "schemaDiagram": "erDiagram\\n  boards ||--o{ cards : contains\\n  boards ||--o{ notes : contains\\n  boards ||--o{ connections : contains\\n  cards ||--o{ connections : source\\n  cards ||--o{ connections : target"
+    }
+  },
+  "designAndUX": {
+    "visualDirection": {
+      "defaultTheme": "dark",
+      "background": "textura sutil de cortica/papel/noise",
+      "brandIdentity": "A identidade visual deve refletir a origem alema do nome Fadenbrett: clima investigativo sobrio, linguagem editorial e foco em conexoes narrativas.",
+      "palette": "Paleta sobria e investigativa (grafite, antracito, cinzas frios e bege de papel), com vermelho profundo como cor de acento principal.",
+      "cards": "aparencia de foto pinada com sombra e leve rotacao",
+      "connections": "curvas organicas estilo fio/barbante, com o vermelho (roter Faden) como elemento visual central das relacoes",
+      "stickyNotes": "post-its realistas com cores suaves e sombra",
+      "typography": "tipografia que remeta a documentos e maquinas de escrever europeias para notas, com sans-serif clean para UI"
+    },
+    "interactions": [
+      "Drag and drop fluido (meta 60fps)",
+      "Zoom suave por scroll e pinch",
+      "Duplo clique para editar inline",
+      "Right-click para context menu",
+      "Selecao multipla por Shift+Click e lasso",
+      "Snap-to-grid opcional",
+      "Atalhos de teclado (Delete, Ctrl+Z, Ctrl+S, etc.)"
+    ]
+  },
+  "roadmap": [
+    {
+      "phase": "Fase 1",
+      "window": "4-6 semanas",
+      "goal": "MVP funcional",
+      "scope": [
+        "Canvas",
+        "Cards",
+        "Conexoes",
+        "Notes",
+        "Persistencia",
+        "Filtros"
+      ]
+    },
+    {
+      "phase": "Fase 2",
+      "window": "3-4 semanas",
+      "goal": "Produtividade avancada",
+      "scope": [
+        "Timeline view",
+        "Upload de imagens",
+        "Export PNG",
+        "Busca",
+        "Undo/Redo"
+      ]
+    },
+    {
+      "phase": "Fase 3",
+      "window": "4-6 semanas",
+      "goal": "Escala e colaboracao",
+      "scope": [
+        "Colaboracao real-time",
+        "Templates",
+        "Mobile touch",
+        "Minimap"
+      ]
+    },
+    {
+      "phase": "Fase 4",
+      "window": "6-8 semanas",
+      "goal": "Self-hosted real + producao",
+      "scope": [
+        "Responsividade completa",
+        "Backend Fastify + SQLite",
+        "Persistencia via API",
+        "Colaboracao via WebSocket",
+        "Upload de imagens real",
+        "Docker + docker-compose",
+        "GitHub Actions CI/CD",
+        "Script Proxmox LXC"
+      ]
+    }
+  ],
+  "successMetrics": [
+    {
+      "id": "MET-001",
+      "name": "Boards criados",
+      "definition": "Quantidade de boards novos por instancia/mes",
+      "target": ">= 5"
+    },
+    {
+      "id": "MET-002",
+      "name": "Cards por board",
+      "definition": "Media de cards por board ativo",
+      "target": ">= 30"
+    },
+    {
+      "id": "MET-003",
+      "name": "Tempo de sessao",
+      "definition": "Tempo medio de uso por sessao",
+      "target": ">= 15 minutos"
+    },
+    {
+      "id": "MET-004",
+      "name": "Frequencia de uso",
+      "definition": "Dias ativos por semana",
+      "target": ">= 3 dias/semana"
+    }
+  ],
+  "risksAndMitigations": [
+    {
+      "risk": "Performance com muitos elementos",
+      "impact": "Alto",
+      "mitigation": "Virtualizacao parcial, memoizacao e throttling"
+    },
+    {
+      "risk": "Complexidade da engine de canvas",
+      "impact": "Alto",
+      "mitigation": "Escopo visual incremental com testes de carga desde a Fase 1"
+    },
+    {
+      "risk": "Conflitos em colaboracao real-time",
+      "impact": "Medio",
+      "mitigation": "Modelo de operacoes com versionamento e reconciliacao"
+    },
+    {
+      "risk": "Crescimento de armazenamento de imagens",
+      "impact": "Medio",
+      "mitigation": "Limites por arquivo, compressao e rotina de backup"
+    }
+  ],
+  "stories": [
+    {
+      "id": "S001",
+      "title": "Canvas infinito com pan e zoom",
+      "phase": "Fase 1",
+      "priority": 1,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Implementar superficie infinita com navegacao fluida por pan e zoom para servir como base do board.",
+      "userStories": [
+        "Como usuario, quero arrastar o fundo para navegar livremente no board.",
+        "Como usuario, quero aplicar zoom com scroll/pinch para focar em regioes especificas."
+      ],
+      "acceptance": [
+        "Pan por drag no fundo sem travamentos perceptiveis",
+        "Zoom por scroll e pinch, centrado no cursor/gesto",
+        "Sem limites visiveis de tamanho do canvas",
+        "Manter experiencia fluida no cenario de carga alvo"
+      ],
+      "technicalNotes": [
+        "Usar React Flow com viewport controlada",
+        "Aplicar throttling de eventos de wheel/pointer"
+      ]
+    },
+    {
+      "id": "S002",
+      "title": "Cards de personagem/elemento",
+      "phase": "Fase 1",
+      "priority": 2,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Criar cards visuais contendo avatar/foto/emoji, titulo, notas, tags, era e cor de grupo.",
+      "userStories": [
+        "Como usuario, quero representar personagens e entidades com contexto visual completo."
+      ],
+      "acceptance": [
+        "Criar, editar e deletar cards",
+        "Campos: avatar, titulo, descricao, tags, era e cor",
+        "Cards posicionaveis no canvas",
+        "Dados persistidos localmente"
+      ],
+      "technicalNotes": [
+        "Node customizado no React Flow",
+        "Validacao de formulario com Zod"
+      ]
+    },
+    {
+      "id": "S003",
+      "title": "Post-its posicionaveis",
+      "phase": "Fase 1",
+      "priority": 3,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Adicionar sticky notes coloridos com edicao inline e rotacao leve para efeito visual.",
+      "userStories": [
+        "Como usuario, quero registrar hipoteses rapidamente no board sem precisar abrir formularios complexos."
+      ],
+      "acceptance": [
+        "Criar sticky note em qualquer ponto do canvas",
+        "Duplo clique para editar conteudo inline",
+        "Variacao de cores de post-it",
+        "Rotacao inicial sutil e arraste livre"
+      ],
+      "technicalNotes": [
+        "Componentes de note com estilo paper-like",
+        "Persistencia idempotente no backend"
+      ]
+    },
+    {
+      "id": "S004",
+      "title": "Conexoes yarn com label e tipo visual",
+      "phase": "Fase 1",
+      "priority": 4,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Permitir conexoes entre cards com label editavel, tipos visuais e estilos customizados.",
+      "userStories": [
+        "Como usuario, quero indicar relacoes (familia, romance, misterio) com pistas visuais distintas."
+      ],
+      "acceptance": [
+        "Conectar cards por handles",
+        "Editar label no meio da conexao",
+        "Tipos padrao: solida, tracejada, pontilhada",
+        "Cor e estilo customizaveis por conexao"
+      ],
+      "technicalNotes": [
+        "Edge customizada com curva organica",
+        "Renderizar label com portal/overlay para melhor legibilidade"
+      ]
+    },
+    {
+      "id": "S005",
+      "title": "CRUD completo no canvas e interacoes rapidas",
+      "phase": "Fase 1",
+      "priority": 5,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Consolidar criacao, edicao, movimento e exclusao de cards, notes e conexoes no proprio canvas.",
+      "userStories": [
+        "Como usuario, quero gerenciar o board sem sair da tela principal."
+      ],
+      "acceptance": [
+        "Menu contextual por clique direito",
+        "Selecao multipla com Shift+Click",
+        "Lasso selection",
+        "Atalhos basicos (Delete, Ctrl+S)",
+        "Confirmacao para exclusoes destrutivas"
+      ],
+      "technicalNotes": [
+        "Centralizar comandos em action dispatcher no Zustand",
+        "Separar operacoes destrutivas para confirmar antes de persistir"
+      ]
+    },
+    {
+      "id": "S006",
+      "title": "Filtros e camadas com dimming",
+      "phase": "Fase 1",
+      "priority": 6,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Aplicar filtros por grupo, tag, era e tipo de conexao, mantendo contexto por dimming de elementos nao filtrados.",
+      "userStories": [
+        "Como usuario, quero focar em um nucleo sem esconder totalmente o restante do quadro."
+      ],
+      "acceptance": [
+        "Filtros combinados por multiplos criterios",
+        "Elementos fora do filtro com opacidade reduzida",
+        "Botao para limpar todos os filtros"
+      ],
+      "technicalNotes": [
+        "Derivar estado filtrado via selectors memoizados",
+        "Nao remover elementos do DOM para preservar contexto espacial"
+      ]
+    },
+    {
+      "id": "S007",
+      "title": "Painel de detalhes",
+      "phase": "Fase 1",
+      "priority": 7,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Ao selecionar um card, abrir painel lateral/inferior com informacoes completas e conexoes navegaveis.",
+      "userStories": [
+        "Como usuario, quero ler e editar detalhes sem poluir visualmente o canvas."
+      ],
+      "acceptance": [
+        "Clique em card abre painel com campos completos",
+        "Lista de conexoes clicavel",
+        "Navegacao para elemento relacionado ao clicar na conexao"
+      ],
+      "technicalNotes": [
+        "Painel controlado por selected entity store",
+        "Scroll e foco acessivel"
+      ]
+    },
+    {
+      "id": "S008",
+      "title": "Persistencia local e auto-save",
+      "phase": "Fase 1",
+      "priority": 8,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Persistir boards localmente com auto-save recorrente e restauracao consistente apos reload.",
+      "userStories": [
+        "Como usuario, quero ter seguranca de que nao vou perder progresso no board."
+      ],
+      "acceptance": [
+        "Auto-save a cada 30 segundos",
+        "Auto-save em mudancas significativas",
+        "Recarregar pagina restaura estado salvo",
+        "Modo offline funcional apos carregamento"
+      ],
+      "technicalNotes": [
+        "Persistir snapshot no backend e opcionalmente em IndexedDB",
+        "Debounce para evitar excesso de escrita"
+      ]
+    },
+    {
+      "id": "S009",
+      "title": "Export de board em PNG/JPG",
+      "phase": "Fase 1",
+      "priority": 9,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Exportar board em imagem de alta resolucao para compartilhamento e arquivamento.",
+      "userStories": [
+        "Como usuario, quero compartilhar meu quadro sem depender do app aberto."
+      ],
+      "acceptance": [
+        "Export para PNG e JPG",
+        "Escalas 2x e 4x",
+        "Legibilidade preservada de textos e conexoes"
+      ],
+      "technicalNotes": [
+        "Captura por viewport render ou rasterizacao dedicada",
+        "Validar memoria em boards grandes"
+      ]
+    },
+    {
+      "id": "S010",
+      "title": "Timeline view por era/data",
+      "phase": "Fase 2",
+      "priority": 10,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Adicionar visualizacao horizontal temporal para analisar eventos por era/data.",
+      "userStories": [
+        "Como usuario, quero revisar os eventos em ordem temporal para entender causalidade."
+      ],
+      "acceptance": [
+        "Alternar entre canvas livre e timeline",
+        "Cards posicionados em trilha temporal",
+        "Filtros sincronizados com timeline"
+      ],
+      "technicalNotes": [
+        "Reaproveitar entidades existentes com layout temporal derivado"
+      ]
+    },
+    {
+      "id": "S011",
+      "title": "Multiplos boards por projeto",
+      "phase": "Fase 2",
+      "priority": 11,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Permitir varios boards no mesmo projeto narrativo com navegacao rapida.",
+      "userStories": [
+        "Como usuario, quero separar temporadas ou arcos em quadros distintos."
+      ],
+      "acceptance": [
+        "Criar, renomear e deletar board",
+        "Navegar entre boards pela sidebar",
+        "Ultimo board aberto persistido"
+      ],
+      "technicalNotes": [
+        "Separar escopo por board_id em todas as queries"
+      ]
+    },
+    {
+      "id": "S012",
+      "title": "Import/Export JSON",
+      "phase": "Fase 2",
+      "priority": 12,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Suportar backup e compartilhamento de boards em JSON versionado.",
+      "userStories": [
+        "Como usuario, quero migrar meu projeto entre instancias sem perder dados."
+      ],
+      "acceptance": [
+        "Export completo de projeto/board para JSON",
+        "Import validado por schema",
+        "Import idempotente para evitar duplicacoes acidentais"
+      ],
+      "technicalNotes": [
+        "Versionar payload com schema_version",
+        "Validar com Zod antes de persistir"
+      ]
+    },
+    {
+      "id": "S013",
+      "title": "Busca textual global",
+      "phase": "Fase 2",
+      "priority": 13,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Implementar busca textual em cards, notes e labels de conexoes.",
+      "userStories": [
+        "Como usuario, quero localizar rapidamente nomes, teorias e pistas no board."
+      ],
+      "acceptance": [
+        "Campo global de busca",
+        "Highlight de resultados",
+        "Navegacao proximo/anterior resultado"
+      ],
+      "technicalNotes": [
+        "Indexacao simples por sqlite FTS opcional",
+        "Fallback por busca em memoria para datasets pequenos"
+      ]
+    },
+    {
+      "id": "S014",
+      "title": "Upload de imagens para cards",
+      "phase": "Fase 2",
+      "priority": 14,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Adicionar upload de imagens com armazenamento local e preview para cards.",
+      "userStories": [
+        "Como usuario, quero usar fotos/screenshot reais como referencia visual."
+      ],
+      "acceptance": [
+        "Upload por seletor e drag-and-drop",
+        "Persistencia em filesystem local",
+        "Preview e remocao da imagem no card"
+      ],
+      "technicalNotes": [
+        "Salvar metadados de arquivo no banco",
+        "Aplicar limites de tamanho e tipo"
+      ]
+    },
+    {
+      "id": "S015",
+      "title": "Undo/Redo completo",
+      "phase": "Fase 2",
+      "priority": 15,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Implementar historico de comandos para desfazer/refazer operacoes no canvas.",
+      "userStories": [
+        "Como usuario, quero voltar atras rapidamente quando cometer erros."
+      ],
+      "acceptance": [
+        "Ctrl+Z e Ctrl+Shift+Z funcionais",
+        "Historico cobre CRUD e movimentacoes",
+        "Limites de historico configuraveis"
+      ],
+      "technicalNotes": [
+        "Modelo command pattern no store",
+        "Compactacao de eventos repetitivos"
+      ]
+    },
+    {
+      "id": "S016",
+      "title": "Sistema de temas (dark/light/custom)",
+      "phase": "Fase 2",
+      "priority": 16,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Expandir tema para dark/light/custom preservando contraste e legibilidade.",
+      "userStories": [
+        "Como usuario, quero personalizar o visual sem perder a identidade investigativa."
+      ],
+      "acceptance": [
+        "Alternancia instantanea de tema",
+        "Persistencia da preferencia",
+        "Tokens de cor aplicados em toda a UI"
+      ],
+      "technicalNotes": [
+        "CSS variables centralizadas",
+        "Testes de contraste minimos"
+      ]
+    },
+    {
+      "id": "S017",
+      "title": "Minimap e agrupamento visual",
+      "phase": "Fase 3",
+      "priority": 17,
+      "priorityLabel": "P2",
+      "passes": true,
+      "description": "Adicionar minimap para navegacao e frames para agrupamento de conjuntos de cards.",
+      "userStories": [
+        "Como usuario, quero localizar rapidamente areas do board e agrupar contextos narrativos."
+      ],
+      "acceptance": [
+        "Minimap com viewport ativa e click-to-pan",
+        "Criar frame/cluster com titulo e cor",
+        "Mover frame move elementos internos"
+      ],
+      "technicalNotes": [
+        "Usar camada dedicada para overlays de frame"
+      ]
+    },
+    {
+      "id": "S018",
+      "title": "Modo apresentacao guiado",
+      "phase": "Fase 3",
+      "priority": 18,
+      "priorityLabel": "P2",
+      "passes": true,
+      "description": "Implementar percurso guiado pelo board para expor teorias em sequencia.",
+      "userStories": [
+        "Como usuario, quero apresentar minha investigacao como uma narrativa estruturada."
+      ],
+      "acceptance": [
+        "Definir passos com foco em regioes/cards",
+        "Navegacao por teclado e controles na UI",
+        "Modo somente apresentacao sem edicao"
+      ],
+      "technicalNotes": [
+        "Armazenar roteiro como lista ordenada de stops"
+      ]
+    },
+    {
+      "id": "S019",
+      "title": "Colaboracao real-time",
+      "phase": "Fase 3",
+      "priority": 19,
+      "priorityLabel": "P2",
+      "passes": true,
+      "description": "Permitir co-edicao simultanea de board com sincronizacao em tempo real.",
+      "userStories": [
+        "Como equipe, queremos investigar juntos no mesmo board em tempo real."
+      ],
+      "acceptance": [
+        "Atualizacoes quase em tempo real via WebSocket",
+        "Indicacao de presenca e cursores remotos",
+        "Resolucao basica de conflitos"
+      ],
+      "technicalNotes": [
+        "Canal de operacoes incrementais",
+        "Versionamento por entidade"
+      ]
+    },
+    {
+      "id": "S020",
+      "title": "Templates prontos para series populares",
+      "phase": "Fase 3",
+      "priority": 20,
+      "priorityLabel": "P2",
+      "passes": true,
+      "description": "Disponibilizar templates iniciais (ex: Dark, Lost) para onboarding rapido.",
+      "userStories": [
+        "Como usuario iniciante, quero comecar com uma estrutura pronta e adaptar depois."
+      ],
+      "acceptance": [
+        "Galeria de templates",
+        "Aplicacao de template em 1 clique",
+        "Template gera board editavel"
+      ],
+      "technicalNotes": [
+        "Templates em JSON versionado e validado"
+      ]
+    },
+    {
+      "id": "S021",
+      "title": "Experiencia mobile touch",
+      "phase": "Fase 3",
+      "priority": 21,
+      "priorityLabel": "P2",
+      "passes": true,
+      "description": "Adaptar UI e interacoes para touch/gestos em mobile e tablet.",
+      "userStories": [
+        "Como usuario mobile, quero navegar e editar o board com gestos naturais."
+      ],
+      "acceptance": [
+        "Pan e zoom por gestos touch",
+        "Menus e alvos touch-friendly",
+        "Fluxos principais funcionais sem mouse"
+      ],
+      "technicalNotes": [
+        "Gestos com preventDefault seletivo para evitar scroll acidental"
+      ]
+    },
+    {
+      "id": "S022",
+      "title": "Refatoracao de layout responsivo completo",
+      "phase": "Fase 4",
+      "priority": 22,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Revisar e refatorar todos os componentes da UI para comportamento correto em mobile (320-767px), tablet (768-1023px) e desktop (1024px+), garantindo que nenhuma feature implementada quebre ou fique inutilizavel em telas menores.",
+      "userStories": [
+        "Como usuario mobile, quero usar todas as funcionalidades sem elementos sobrepostos ou fora da tela.",
+        "Como usuario tablet, quero que paineis e sidebars se adaptem ao espaco disponivel.",
+        "Como usuario desktop, quero manter a densidade de informacao atual sem regressoes."
+      ],
+      "acceptance": [
+        "Header compacto em mobile com acoes priorizadas em menu hamburguer ou bottom bar",
+        "Sidebar de boards colapsavel em mobile (drawer/sheet) e fixa em desktop",
+        "Detail panel ocupa tela cheia em mobile e sidebar em desktop",
+        "Modais (template gallery, forms de card/note/connection) com altura maxima e scroll interno em mobile",
+        "Presentation overlay, presence bar e minimap reposicionados para nao sobrepor controles de canvas em mobile",
+        "Timeline view scrollavel horizontalmente em mobile",
+        "Todos os botoes com min-height 44px em touch",
+        "Sem scroll horizontal indesejado em nenhuma breakpoint",
+        "Testes visuais em 375px, 768px e 1280px de largura"
+      ],
+      "technicalNotes": [
+        "Usar Tailwind breakpoints sm/md/lg consistentemente em todos os componentes",
+        "Sheet/drawer para sidebar mobile via biblioteca headless (Radix ou similar) ou implementacao propria",
+        "Audit sistematico de cada feature: canvas, cards, notes, connections, filters, detail panel, presentation, collab, templates, timeline",
+        "Evitar position:fixed em mobile sem considerar safe-area-inset (iOS notch/home bar)",
+        "CSS env(safe-area-inset-bottom) para bottom bars em iOS"
+      ]
+    },
+    {
+      "id": "S023",
+      "title": "API REST com Fastify + SQLite",
+      "phase": "Fase 4",
+      "priority": 23,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Implementar backend Node.js com Fastify, Drizzle ORM e SQLite cobrindo todos os endpoints definidos na arquitetura do PRD para boards, cards, notes e connections.",
+      "userStories": [
+        "Como sistema, quero persistir dados em SQLite no servidor para durabilidade real alem do browser.",
+        "Como desenvolvedor, quero uma API REST tipada e documentada para integrar com o frontend."
+      ],
+      "acceptance": [
+        "Servidor Fastify iniciado em apps/api com porta configuravel por env",
+        "Schema Drizzle com tabelas: boards, cards, notes, connections, tags, card_tags",
+        "Migracao automatica na inicializacao (drizzle-kit push ou migrate)",
+        "Endpoints CRUD completos para boards, cards, notes e connections conforme PRD",
+        "Validacao de payloads de entrada com Zod ou Fastify schema",
+        "Endpoint POST /boards/:id/autosave para snapshot completo",
+        "Endpoint GET /boards/:id/export para snapshot JSON",
+        "CORS configurado para aceitar origin do frontend (dev e prod)",
+        "Health check GET /health retornando 200",
+        "Testes de integracao basicos para rotas criticas"
+      ],
+      "technicalNotes": [
+        "Usar @fadenbrett/api package no monorepo pnpm",
+        "Drizzle ORM com driver better-sqlite3 para SQLite sincrono",
+        "Fastify com plugins: @fastify/cors, @fastify/multipart (para upload futuro), @fastify/websocket",
+        "IDs como UUIDs (crypto.randomUUID()) para compatibilidade com IDs do React Flow",
+        "SQLite em data/sqlite/fadenbrett.db com volume montado no Docker",
+        "Separar schema Drizzle em apps/api/src/db/schema/*.ts",
+        "Usar @fadenbrett/shared para tipos compartilhados frontend/backend"
+      ]
+    },
+    {
+      "id": "S024",
+      "title": "Migracao de persistencia para API backend",
+      "phase": "Fase 4",
+      "priority": 24,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Substituir o armazenamento via Zustand persist + localStorage pela API REST do backend, mantendo o Zustand como camada de cache/estado reativo no frontend.",
+      "userStories": [
+        "Como usuario, quero que meus dados sejam persistidos no servidor e sobrevivam a troca de browser ou dispositivo.",
+        "Como usuario, quero carregamento inicial rapido mesmo com a API como fonte de verdade."
+      ],
+      "acceptance": [
+        "Frontend carrega boards do backend ao inicializar (GET /boards)",
+        "Toda mutacao (criar, editar, deletar card/note/connection) dispara chamada API correspondente",
+        "Auto-save via POST /boards/:id/autosave a cada 30s ou mudanca significativa",
+        "Fallback gracioso com mensagem de erro se API estiver indisponivel",
+        "Zustand store refatorado: remover persist middleware, adicionar camada de sync com API",
+        "Sem regressao funcional comparado a versao localStorage",
+        "Variavel de ambiente VITE_API_URL para configurar base URL da API"
+      ],
+      "technicalNotes": [
+        "Criar apps/web/src/lib/api-client.ts com funcoes tipadas por endpoint",
+        "Usar React Query (TanStack Query) ou SWR para cache e revalidacao, ou gerenciar manualmente no Zustand",
+        "Manter IDs compativeis: React Flow usa string IDs, backend usa UUIDs — ja sao compativeis",
+        "Implementar optimistic updates para mutacoes de posicao (drag) para manter 60fps sem esperar resposta",
+        "Debounce de 500ms para updates de posicao (onNodeDragStop) antes de chamar PATCH /cards/:id",
+        "Remover chave fadenbrett-v2 do localStorage apos migracao bem-sucedida"
+      ]
+    },
+    {
+      "id": "S025",
+      "title": "Colaboracao real via WebSockets",
+      "phase": "Fase 4",
+      "priority": 25,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Substituir o BroadcastChannel (same-machine only) por WebSockets via Fastify para colaboracao real entre usuarios em maquinas distintas.",
+      "userStories": [
+        "Como equipe distribuida, quero co-editar o mesmo board em tempo real de maquinas diferentes.",
+        "Como usuario, quero ver os cursores e mudancas dos colegas instantaneamente."
+      ],
+      "acceptance": [
+        "Endpoint WebSocket ws://host/ws/boards/:boardId no Fastify",
+        "Frontend conecta ao WebSocket ao entrar em colaboracao",
+        "Mensagens de cursor-move, state-sync, presence, leave via WebSocket",
+        "Cursores remotos funcionando entre maquinas distintas",
+        "Reconexao automatica com backoff exponencial em caso de queda",
+        "BroadcastChannel removido ou mantido apenas como fallback same-tab",
+        "Compatibilidade com proxy reverso (Nginx/Traefik com upgrade WebSocket)"
+      ],
+      "technicalNotes": [
+        "Usar @fastify/websocket plugin",
+        "Room por boardId: Map<boardId, Set<WebSocket>> no servidor para broadcast seletivo",
+        "Protocolo de mensagem identico ao BroadcastChannel atual (CollabMessage) para reutilizar logica do frontend",
+        "Considerar Yjs + y-websocket para CRDTs se conflitos se tornarem problema (avaliar na implementacao)",
+        "Heartbeat ping/pong a cada 30s para detectar conexoes mortas",
+        "Limpar sala quando ultimo usuario sair"
+      ]
+    },
+    {
+      "id": "S026",
+      "title": "Upload de imagens para servidor",
+      "phase": "Fase 4",
+      "priority": 26,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Substituir armazenamento de avatares em base64 no localStorage por upload real de arquivos para o servidor, servidos via URL estatica.",
+      "userStories": [
+        "Como usuario, quero fazer upload de fotos para cards sem preocupacao com limite de storage do browser.",
+        "Como administrador, quero que imagens sejam armazenadas no filesystem do servidor com controle de espaco."
+      ],
+      "acceptance": [
+        "Endpoint POST /upload aceita multipart/form-data e retorna { url: string }",
+        "Imagens servidas via GET /uploads/:filename (arquivos estaticos)",
+        "Card form aceita upload de arquivo e drag-and-drop, substituindo input base64",
+        "Limite de 5MB por arquivo, tipos aceitos: image/jpeg, image/png, image/webp, image/gif",
+        "Preview da imagem no card usando a URL do servidor",
+        "Imagens antigas em base64 continuam funcionando (backward compat)",
+        "Armazenamento em data/uploads/ com nome hasheado (SHA256 do conteudo)"
+      ],
+      "technicalNotes": [
+        "Usar @fastify/multipart para parsing de multipart no Fastify",
+        "Servir arquivos estaticos com @fastify/static apontando para data/uploads/",
+        "Hash do conteudo como nome do arquivo previne duplicatas",
+        "Salvar referencia (filename, mime_type, size_bytes) na tabela card_images ou como campo em cards",
+        "Volume data/uploads/ montado no Docker para persistencia",
+        "Implementar rotina de limpeza de orfaos (imagens sem card referenciando) como job opcional"
+      ]
+    },
+    {
+      "id": "S027",
+      "title": "Dockerizacao com Nginx + Node + Compose",
+      "phase": "Fase 4",
+      "priority": 27,
+      "priorityLabel": "P0",
+      "passes": true,
+      "description": "Criar Dockerfiles para frontend (Nginx servindo build Vite) e backend (Node.js), unidos por docker-compose.yml, permitindo deploy com um unico comando.",
+      "userStories": [
+        "Como usuario self-hosted, quero subir o Fadenbrett com docker compose up -d e acessar pelo browser.",
+        "Como contribuidor, quero um ambiente de desenvolvimento isolado e reproduzivel."
+      ],
+      "acceptance": [
+        "apps/web/Dockerfile: multi-stage (build Vite -> Nginx Alpine) gerando imagem < 50MB",
+        "apps/api/Dockerfile: Node Alpine com pnpm, build TypeScript, start producao",
+        "deploy/docker-compose.yml orquestra frontend, backend e volumes de dados",
+        "Variaveis de ambiente documentadas em deploy/.env.example",
+        "Nginx configurado como reverse proxy: / para frontend, /api/ para backend, /ws/ para WebSocket",
+        "Volume data/ montado para SQLite e uploads persistirem entre restarts",
+        "docker compose up -d sobe o stack completo funcional",
+        "Imagem total < 500MB (NFR-005)",
+        "README com instrucoes de deploy atualizadas"
+      ],
+      "technicalNotes": [
+        "Nginx conf: proxy_pass http://api:3000/api/ com rewrite, proxy_pass http://api:3000/ws/ com upgrade WebSocket",
+        "Build args: NODE_ENV=production, VITE_API_URL=/api",
+        "Usar .dockerignore para excluir node_modules, .git, data",
+        "healthcheck no compose para api e frontend",
+        "Network interna Docker: frontend e backend na mesma rede, somente frontend expoe porta 80/443",
+        "Suporte a HTTPS via env FADENBRETT_HTTPS=true com certificado montado via volume (compativel com Traefik/Nginx externo)"
+      ]
+    },
+    {
+      "id": "S028",
+      "title": "CI/CD com GitHub Actions",
+      "phase": "Fase 4",
+      "priority": 28,
+      "priorityLabel": "P1",
+      "passes": true,
+      "description": "Configurar pipelines de CI que executam type-check e lint em cada PR, e build + push de imagem Docker em merges para main.",
+      "userStories": [
+        "Como contribuidor, quero feedback automatico de qualidade antes de mesclar um PR.",
+        "Como mantenedor, quero imagens Docker publicadas automaticamente no GitHub Container Registry a cada release."
+      ],
+      "acceptance": [
+        "Workflow .github/workflows/ci.yml roda em todo PR: pnpm install, type-check, lint",
+        "Workflow .github/workflows/release.yml roda em push para main: build Docker, push para ghcr.io",
+        "Status checks bloqueiam merge de PR com falha",
+        "Cache de pnpm store e Docker layers para execucao rapida (< 3 min para CI)",
+        "Tag de imagem: ghcr.io/<org>/fadenbrett:latest e ghcr.io/<org>/fadenbrett:<sha>",
+        "Secrets documentados: GITHUB_TOKEN (automatico), nenhum outro necessario para ghcr.io"
+      ],
+      "technicalNotes": [
+        "Usar actions/setup-node@v4 com node-version do .nvmrc ou package.json engines",
+        "pnpm/action-setup@v4 para instalar pnpm correto",
+        "Cache: actions/cache com key baseada em pnpm-lock.yaml hash",
+        "Docker build: docker/build-push-action@v5 com cache-from/cache-to ghcr.io",
+        "Separar jobs: lint-typecheck (rapido, sem Docker) e docker-build (mais pesado, so em main)"
+      ]
+    },
+    {
+      "id": "S029",
+      "title": "Script de instalacao Proxmox LXC",
+      "phase": "Fase 4",
+      "priority": 29,
+      "priorityLabel": "P2",
+      "passes": true,
+      "description": "Criar script bash no estilo community-scripts.github.io/ProxmoxVE que, colado no shell do Proxmox, cria e configura automaticamente um LXC Alpine/Debian com Fadenbrett pronto para uso.",
+      "userStories": [
+        "Como usuario Proxmox, quero instalar o Fadenbrett com um unico comando colado no shell do PVE, sem configuracao manual."
+      ],
+      "acceptance": [
+        "Script install.sh em scripts/proxmox/ executa do GitHub via curl | bash",
+        "Cria LXC unprivileged com template Debian 12 ou Alpine 3.19",
+        "Instala Docker + Docker Compose dentro do LXC",
+        "Faz pull da imagem ghcr.io/<org>/fadenbrett:latest e sobe via compose",
+        "Configura auto-start do container no boot do LXC",
+        "Exibe IP do LXC e porta de acesso ao final da instalacao",
+        "Script separado update.sh para atualizar para nova versao sem perda de dados",
+        "Compativel com Proxmox VE 7.x e 8.x",
+        "Parametros configuravies: CT_ID, HOSTNAME, RAM (default 512MB), CORES (default 1), DISK (default 4GB), STORAGE"
+      ],
+      "technicalNotes": [
+        "Seguir estrutura de community-scripts: header comentado com descricao, set -euo pipefail, funcoes msg_info/msg_ok/msg_error com cores ANSI",
+        "Usar pvesh ou pct create para criar o container via API do Proxmox",
+        "Detectar storage disponivel automaticamente se nao fornecido (pvesm status)",
+        "Baixar template Debian via pveam download local debian-12-standard",
+        "Montar data/ em volume do host LXC para persistencia de dados fora do container",
+        "Script wrapper one-liner: bash <(curl -fsSL https://raw.githubusercontent.com/<org>/fadenbrett/main/scripts/proxmox/install.sh)"
+      ]
+    }
+  ]
+}
