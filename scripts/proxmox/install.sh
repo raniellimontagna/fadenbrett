@@ -21,7 +21,7 @@ msg_error() { local msg="$1"; echo -e "${BFR} ${RD}✖ ${msg}${CL}"; exit 1; }
 
 # ── Configurable parameters (override via env) ────────────────────────────────
 CT_ID="${CT_ID:-$(pvesh get /cluster/nextid 2>/dev/null || echo 200)}"
-HOSTNAME="${HOSTNAME:-fadenbrett}"
+CT_HOSTNAME="${CT_HOSTNAME:-fadenbrett}"
 CT_RAM="${CT_RAM:-512}"
 CT_CORES="${CT_CORES:-1}"
 CT_DISK="${CT_DISK:-8}"
@@ -40,7 +40,7 @@ fi
 echo -e "\n\033[1;96m  Fadenbrett LXC Installer\033[m"
 echo    "  ─────────────────────────────────────────"
 printf  "  CT ID:    %s\n  Hostname: %s\n  RAM:      %s MB\n  Cores:    %s\n  Disk:     %s GB\n  Storage:  %s\n  Port:     %s\n\n" \
-  "$CT_ID" "$HOSTNAME" "$CT_RAM" "$CT_CORES" "$CT_DISK" "$CT_STORAGE" "$FADENBRETT_PORT"
+  "$CT_ID" "$CT_HOSTNAME" "$CT_RAM" "$CT_CORES" "$CT_DISK" "$CT_STORAGE" "$FADENBRETT_PORT"
 
 # ── Download Debian 12 template ───────────────────────────────────────────────
 TEMPLATE_STORAGE=$(pvesm status --content vztmpl 2>/dev/null | awk 'NR>1 && $3=="active" {print $1; exit}')
@@ -56,7 +56,7 @@ msg_ok "Template ready: $TEMPLATE"
 # ── Create the LXC container ─────────────────────────────────────────────────
 msg_info "Creating LXC container $CT_ID"
 pct create "$CT_ID" "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" \
-  --hostname "$HOSTNAME" \
+  --hostname "$CT_HOSTNAME" \
   --cores "$CT_CORES" \
   --memory "$CT_RAM" \
   --rootfs "${CT_STORAGE}:${CT_DISK}" \
