@@ -1,5 +1,7 @@
 import type { Node, Edge } from '@xyflow/react'
 
+import { generateId } from '../../utils/uuid.js'
+
 export interface CollabUser {
   id: string
   name: string
@@ -28,7 +30,7 @@ export function generateUser(): CollabUser {
   const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]
   const color = USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)]
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     name: `${adj} ${noun}`,
     color,
     cursor: null,

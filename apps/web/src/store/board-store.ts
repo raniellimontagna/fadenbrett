@@ -8,6 +8,7 @@ import {
   applyEdgeChanges,
 } from '@xyflow/react'
 import { create } from 'zustand'
+import { generateId } from '../utils/uuid.js'
 import { type CardData, DEFAULT_CARD_DATA } from '../features/cards/types'
 import { type ConnectionData, DEFAULT_CONNECTION_DATA, type ConnectionStyle } from '../features/connections/types'
 import { type NoteData, DEFAULT_NOTE_DATA, NOTE_COLORS } from '../features/notes/types'
@@ -253,7 +254,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   activeBoardId: initActiveBoardId,
 
   createBoard: (name) => {
-    const id = `board-${crypto.randomUUID()}`
+    const id = `board-${generateId()}`
     const state = get()
     const updatedBoards = {
       ...state.boards,
@@ -313,7 +314,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   onConnect: (connection) => {
     get().pushHistory()
     const edge: Edge = {
-      id: `e-${crypto.randomUUID()}`,
+      id: `e-${generateId()}`,
       source: connection.source,
       target: connection.target,
       sourceHandle: connection.sourceHandle,
@@ -326,7 +327,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
   addCard: (position, data) => {
     get().pushHistory()
-    const id = crypto.randomUUID()
+    const id = generateId()
     const node: Node = {
       id, type: 'card', position,
       data: { ...DEFAULT_CARD_DATA, ...data, id } as unknown as Record<string, unknown>,
@@ -355,7 +356,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
   addNote: (position, data) => {
     get().pushHistory()
-    const id = crypto.randomUUID()
+    const id = generateId()
     const rotation = (Math.random() - 0.5) * 6
     const color = data?.color ?? NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)]
     const node: Node = {
@@ -386,7 +387,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
   addFrame: (position, childNodeIds) => {
     get().pushHistory()
-    const id = `frame-${crypto.randomUUID()}`
+    const id = `frame-${generateId()}`
     const PADDING = 32
 
     let frameX = position.x
@@ -560,7 +561,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     if (presentationStops.some((s) => s.nodeId === nodeId)) return
     const node = nodes.find((n) => n.id === nodeId)
     if (!node) return
-    const stop: PresentationStop = { id: crypto.randomUUID(), nodeId, label }
+    const stop: PresentationStop = { id: generateId(), nodeId, label }
     const next = [...presentationStops, stop]
     set({ presentationStops: next })
     lsSet('fadenbrett-presentation', next)
@@ -669,7 +670,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   },
 
   applyTemplate: (name, nodes, edges) => {
-    const id = `board-${crypto.randomUUID()}`
+    const id = `board-${generateId()}`
     const state = get()
     const updatedBoards = {
       ...state.boards,
