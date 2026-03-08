@@ -78,6 +78,7 @@ const initTheme = lsGet<'dark' | 'light' | 'custom'>('fadenbrett-theme', 'dark')
 const initUser = lsGet<CollabUser | null>('fadenbrett-user', null) ?? generateUser()
 const initPresentationStops = lsGet<PresentationStop[]>('fadenbrett-presentation', [])
 const initActiveBoardId = lsGet<string>('fadenbrett-active-board', 'board-default')
+const initRulersVisible = lsGet<boolean>('fadenbrett-rulers-visible', false)
 
 // Apply theme immediately (before React renders)
 document.documentElement.setAttribute('data-theme', initTheme)
@@ -96,6 +97,12 @@ const debouncedApiSave = makeDebounced(
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+export interface Ruler {
+  id: string
+  axis: 'h' | 'v'
+  position: number
+}
 
 export interface BoardEntry {
   id: string
@@ -222,6 +229,16 @@ export interface BoardState {
   copySelected: () => void
   pasteClipboard: () => void
   duplicateNodes: (nodeIds: string[]) => void
+  // Layer ordering
+  bringToFront: (nodeIds: string[]) => void
+  sendToBack: (nodeIds: string[]) => void
+  // Rulers
+  rulers: Ruler[]
+  rulersVisible: boolean
+  addRuler: (axis: 'h' | 'v', position: number) => void
+  updateRuler: (id: string, position: number) => void
+  removeRuler: (id: string) => void
+  toggleRulers: () => void
   // Templates
   applyTemplate: (name: string, nodes: Node[], edges: Edge[]) => void
 }
@@ -323,9 +340,25 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   edges: [],
 
   onNodesChange: (changes) => {
+    const { rulers, rulersVisible } = get()
     const hasDragEnd = changes.some((c) => c.type === 'position' && c.dragging === false)
     if (hasDragEnd) get().pushHistory()
-    set({ nodes: applyNodeChanges(changes, get().nodes) })
+
+    // Ruler snap: intercept position changes before applying them
+    const snappedChanges = (rulersVisible && rulers.length > 0)
+      ? changes.map((c) => {
+          if (c.type !== 'position' || !c.position) return c
+          const SNAP_THRESHOLD = 12
+          let { x, y } = c.position
+          for (const r of rulers) {
+            if (r.axis === 'v' && Math.abs(x - r.position) <= SNAP_THRESHOLD) x = r.position
+            if (r.axis === 'h' && Math.abs(y - r.position) <= SNAP_THRESHOLD) y = r.position
+          }
+          return { ...c, position: { x, y } }
+        })
+      : changes
+
+    set({ nodes: applyNodeChanges(snappedChanges, get().nodes) })
   },
   onEdgesChange: (changes) => set({ edges: applyEdgeChanges(changes, get().edges) }),
 
@@ -759,6 +792,51 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     const deselected = nodes.map((n) => (n.selected ? { ...n, selected: false } : n))
     const deselectedEdges = edges.map((e) => (e.selected ? { ...e, selected: false } : e))
     set({ nodes: [...deselected, ...newNodes], edges: [...deselectedEdges, ...newEdges] })
+  },
+
+  // --- Layer ordering ---
+  bringToFront: (nodeIds) => {
+    get().pushHistory()
+    const nodes = get().nodes
+    const ids = new Set(nodeIds)
+    const rest = nodes.filter((n) => !ids.has(n.id))
+    const targets = nodes.filter((n) => ids.has(n.id))
+    set({ nodes: [...rest, ...targets] })
+  },
+
+  sendToBack: (nodeIds) => {
+    get().pushHistory()
+    const nodes = get().nodes
+    const ids = new Set(nodeIds)
+    const rest = nodes.filter((n) => !ids.has(n.id))
+    const targets = nodes.filter((n) => ids.has(n.id))
+    // keep frames always behind: insert targets after the last frame
+    const lastFrameIdx = rest.reduce((acc, n, i) => (n.type === 'frame' ? i : acc), -1)
+    const insertAt = lastFrameIdx + 1
+    set({ nodes: [...rest.slice(0, insertAt), ...targets, ...rest.slice(insertAt)] })
+  },
+
+  // --- Rulers ---
+  rulers: [],
+  rulersVisible: initRulersVisible,
+
+  addRuler: (axis, position) => {
+    const ruler: Ruler = { id: `ruler-${generateId()}`, axis, position }
+    set({ rulers: [...get().rulers, ruler] })
+  },
+
+  updateRuler: (id, position) => {
+    set({ rulers: get().rulers.map((r) => r.id === id ? { ...r, position } : r) })
+  },
+
+  removeRuler: (id) => {
+    set({ rulers: get().rulers.filter((r) => r.id !== id) })
+  },
+
+  toggleRulers: () => {
+    const next = !get().rulersVisible
+    set({ rulersVisible: next })
+    lsSet('fadenbrett-rulers-visible', next)
   },
 
   applyTemplate: (name, nodes, edges) => {
