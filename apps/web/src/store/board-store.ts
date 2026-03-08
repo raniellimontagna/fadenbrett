@@ -4,6 +4,7 @@ import {
   type OnNodesChange,
   type OnEdgesChange,
   type OnConnect,
+  type Connection,
   applyNodeChanges,
   applyEdgeChanges,
 } from '@xyflow/react'
@@ -155,6 +156,7 @@ export interface BoardState {
   boards: Record<string, BoardEntry>
   activeBoardId: string
   createBoard: (name: string, description?: string, color?: string) => string
+  duplicateBoard: (id: string) => void
   deleteBoard: (id: string) => void
   renameBoard: (id: string, name: string) => void
   updateBoardMeta: (id: string, data: { name?: string; description?: string; color?: string }) => void
@@ -178,6 +180,7 @@ export interface BoardState {
   updateFrame: (id: string, data: Partial<Omit<FrameData, 'id'>>) => void
   deleteFrame: (id: string) => void
   updateConnection: (id: string, data: Partial<ConnectionData>) => void
+  reconnectEdge: (edgeId: string, newConnection: Connection) => void
   deleteConnection: (id: string) => void
   getConnection: (id: string) => (ConnectionData & { id: string }) | undefined
   // Selection / Detail panel
@@ -294,6 +297,47 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     lsSet('fadenbrett-active-board', id)
     apiCreateBoard(name, id, description, color).catch(() => {/* ignore */})
     return id
+  },
+
+  duplicateBoard: (sourceId) => {
+    const state = get()
+    // Use live nodes/edges if duplicating the active board
+    const source = sourceId === state.activeBoardId
+      ? { ...state.boards[sourceId], nodes: state.nodes, edges: state.edges }
+      : state.boards[sourceId]
+    if (!source) return
+
+    const newId = `board-${generateId()}`
+    const newName = `${source.name} (cópia)`
+
+    // Remap all node/edge ids so the copy is fully independent
+    const idMap = new Map<string, string>()
+    source.nodes.forEach((n) => idMap.set(n.id, generateId()))
+    const newNodes: Node[] = source.nodes.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      data: { ...n.data, id: idMap.get(n.id)! },
+      selected: false,
+      ...(n.parentId && idMap.has(n.parentId) ? { parentId: idMap.get(n.parentId)! } : {}),
+    }))
+    const newEdges: Edge[] = source.edges.map((e) => ({
+      ...e,
+      id: `e-${generateId()}`,
+      source: idMap.get(e.source) ?? e.source,
+      target: idMap.get(e.target) ?? e.target,
+    }))
+
+    const newEntry = { id: newId, name: newName, description: source.description ?? '', color: source.color ?? '', nodes: newNodes, edges: newEdges }
+    const updatedBoards = {
+      ...state.boards,
+      [state.activeBoardId]: { ...state.boards[state.activeBoardId], nodes: state.nodes, edges: state.edges },
+      [newId]: newEntry,
+    }
+    set({ boards: updatedBoards, activeBoardId: newId, nodes: newNodes, edges: newEdges, selectedCardId: null, activeFilters: EMPTY_FILTERS })
+    lsSet('fadenbrett-active-board', newId)
+    apiCreateBoard(newName, newId, newEntry.description, newEntry.color)
+      .then(() => apiAutosave(newId, { nodes: newNodes, edges: newEdges }))
+      .catch(() => {/* ignore */})
   },
 
   updateBoardMeta: (id, data) => {
@@ -517,6 +561,23 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   updateConnection: (id, data) => {
     get().pushHistory()
     set({ edges: get().edges.map((e) => e.id === id ? { ...e, data: { ...e.data, ...data } } : e) })
+  },
+
+  reconnectEdge: (edgeId, newConnection) => {
+    get().pushHistory()
+    set({
+      edges: get().edges.map((e) =>
+        e.id === edgeId
+          ? {
+              ...e,
+              source: newConnection.source,
+              target: newConnection.target,
+              sourceHandle: newConnection.sourceHandle ?? null,
+              targetHandle: newConnection.targetHandle ?? null,
+            }
+          : e,
+      ),
+    })
   },
 
   deleteConnection: (id) => {

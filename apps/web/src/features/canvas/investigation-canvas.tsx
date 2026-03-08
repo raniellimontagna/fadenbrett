@@ -12,6 +12,7 @@ import {
   type NodeMouseHandler,
   type Edge,
   type Node,
+  type Connection,
 } from '@xyflow/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useBoardStore } from '../../store/board-store'
@@ -81,6 +82,7 @@ export function InvestigationCanvas() {
     rulersVisible,
     toggleRulers,
     addRuler,
+    reconnectEdge,
   } = useBoardStore()
   const { zoomIn, zoomOut, fitView, screenToFlowPosition } = useReactFlow()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -658,6 +660,8 @@ export function InvestigationCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onReconnect={(oldEdge: Edge, newConnection: Connection) => reconnectEdge(oldEdge.id, newConnection)}
+        reconnectRadius={20}
         onPaneClick={onPaneClick}
         onNodeClick={onNodeClick}
         onDoubleClick={onPaneDoubleClick}
