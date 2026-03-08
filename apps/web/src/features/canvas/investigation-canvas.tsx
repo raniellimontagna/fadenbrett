@@ -31,6 +31,7 @@ import { ExportToolbar } from './export-toolbar'
 import { PresentationOverlay } from '../presentation/presentation-overlay'
 import { RemoteCursors } from '../collab/remote-cursors'
 import { useLongPress } from '../../hooks/use-long-press'
+import { RulerOverlay } from './ruler-overlay'
 
 const nodeTypes: NodeTypes = {
   card: CardNodeComponent,
@@ -75,6 +76,11 @@ export function InvestigationCanvas() {
     copySelected,
     pasteClipboard,
     duplicateNodes,
+    bringToFront,
+    sendToBack,
+    rulersVisible,
+    toggleRulers,
+    addRuler,
   } = useBoardStore()
   const { zoomIn, zoomOut, fitView, screenToFlowPosition } = useReactFlow()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -576,7 +582,41 @@ export function InvestigationCanvas() {
       <FilterBar />
 
       {/* Top-right toolbar */}
-      <div className="pointer-events-auto absolute right-3 top-3 z-10" data-export-exclude="true">
+      <div className="pointer-events-auto absolute right-3 top-3 z-10 flex items-center gap-2" data-export-exclude="true">
+        {/* Rulers toggle button */}
+        <button
+          onClick={toggleRulers}
+          title={rulersVisible ? 'Ocultar réguas' : 'Mostrar réguas'}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg border shadow-lg backdrop-blur-sm transition-colors ${
+            rulersVisible
+              ? 'border-fadenbrett-accent/60 bg-fadenbrett-accent/20 text-fadenbrett-accent'
+              : 'border-fadenbrett-muted/30 bg-fadenbrett-surface/90 text-fadenbrett-muted hover:text-fadenbrett-text'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
+            <path d="M3 6h18M3 12h18M3 18h18" />
+            <path d="M6 3v18M12 3v18M18 3v18" opacity={0.5} />
+          </svg>
+        </button>
+        {/* Add horizontal ruler */}
+        {rulersVisible && (
+          <>
+            <button
+              onClick={() => addRuler('h', 0)}
+              title="Adicionar régua horizontal"
+              className="flex h-8 items-center gap-1 rounded-lg border border-fadenbrett-muted/30 bg-fadenbrett-surface/90 px-2 text-xs text-fadenbrett-muted shadow-lg backdrop-blur-sm hover:text-fadenbrett-text"
+            >
+              ― H
+            </button>
+            <button
+              onClick={() => addRuler('v', 0)}
+              title="Adicionar régua vertical"
+              className="flex h-8 items-center gap-1 rounded-lg border border-fadenbrett-muted/30 bg-fadenbrett-surface/90 px-2 text-xs text-fadenbrett-muted shadow-lg backdrop-blur-sm hover:text-fadenbrett-text"
+            >
+              | V
+            </button>
+          </>
+        )}
         <ExportToolbar containerRef={containerRef} />
       </div>
 
@@ -656,7 +696,7 @@ export function InvestigationCanvas() {
         />
         <Controls
           showInteractive={false}
-          className="!bg-fadenbrett-surface !border-fadenbrett-muted/30 !shadow-lg [&>button]:!bg-fadenbrett-surface [&>button]:!border-fadenbrett-muted/20 [&>button]:!fill-fadenbrett-text hover:[&>button]:!bg-fadenbrett-muted/20"
+          className="bg-fadenbrett-surface! border-fadenbrett-muted/30! shadow-lg! [&>button]:bg-fadenbrett-surface! [&>button]:border-fadenbrett-muted/20! [&>button]:fill-fadenbrett-text! hover:[&>button]:bg-fadenbrett-muted/20!"
         />
         <MiniMap
           nodeColor={(n) => {
@@ -664,7 +704,7 @@ export function InvestigationCanvas() {
             const d = n.data as Record<string, string>
             return d?.groupColor ?? '#737373'
           }}
-          className="!hidden sm:!block !bg-fadenbrett-surface !border-fadenbrett-muted/30"
+          className="hidden! sm:block! bg-fadenbrett-surface! border-fadenbrett-muted/30!"
           maskColor="rgba(0,0,0,0.4)"
           pannable
           zoomable
@@ -684,6 +724,8 @@ export function InvestigationCanvas() {
           onEditConnection={handleContextEditConnection}
           onAddToPresentation={handleContextAddToPresentation}
           onDuplicate={(nodeIds) => { duplicateNodes(nodeIds); closeContextMenu() }}
+          onBringToFront={(nodeIds) => { bringToFront(nodeIds); closeContextMenu() }}
+          onSendToBack={(nodeIds) => { sendToBack(nodeIds); closeContextMenu() }}
         />
       )}
 
@@ -722,6 +764,7 @@ export function InvestigationCanvas() {
 
       <PresentationOverlay onStopChange={handlePresentationStopChange} />
       <RemoteCursors />
+      <RulerOverlay />
     </div>
   )
 }

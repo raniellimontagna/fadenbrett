@@ -31,7 +31,7 @@ function BoardModal({ title, initial, onSave, onCancel }: BoardModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
       onClick={onCancel}
     >
       <form
@@ -153,8 +153,6 @@ interface Props {
 export function BoardSidebar({ collapsed, onToggle }: Props) {
   const boards = useBoardStore((s) => s.boards)
   const activeBoardId = useBoardStore((s) => s.activeBoardId)
-  const nodes = useBoardStore((s) => s.nodes)
-  const edges = useBoardStore((s) => s.edges)
   const createBoard = useBoardStore((s) => s.createBoard)
   const deleteBoard = useBoardStore((s) => s.deleteBoard)
   const updateBoardMeta = useBoardStore((s) => s.updateBoardMeta)
@@ -170,22 +168,6 @@ export function BoardSidebar({ collapsed, onToggle }: Props) {
     if (b.id === 'board-default') return 1
     return a.name.localeCompare(b.name)
   })
-
-  // ── Export ──────────────────────────────────────────────────────────────
-  function handleExport() {
-    const activeBoard = boards[activeBoardId]
-    const payload: BoardImportPayload = {
-      schema_version: 1,
-      board: { name: activeBoard.name, nodes, edges },
-    }
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${activeBoard.name.replace(/\s+/g, '_')}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
 
   // ── Import ──────────────────────────────────────────────────────────────
   function handleImportFile(ev: React.ChangeEvent<HTMLInputElement>) {
@@ -361,17 +343,6 @@ export function BoardSidebar({ collapsed, onToggle }: Props) {
             <circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" />
           </svg>
           Novo board
-        </button>
-        <button
-          onClick={handleExport}
-          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-fadenbrett-muted hover:bg-fadenbrett-muted/10 hover:text-fadenbrett-text"
-        >
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
-          Exportar JSON
         </button>
         <button
           onClick={() => fileInputRef.current?.click()}

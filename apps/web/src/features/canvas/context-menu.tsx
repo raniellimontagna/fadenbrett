@@ -24,6 +24,8 @@ interface ContextMenuProps {
   onEditConnection: (edgeId: string) => void
   onAddToPresentation: (nodeId: string) => void
   onDuplicate: (nodeIds: string[]) => void
+  onBringToFront: (nodeIds: string[]) => void
+  onSendToBack: (nodeIds: string[]) => void
 }
 
 export function ContextMenu({
@@ -38,6 +40,8 @@ export function ContextMenu({
   onEditConnection,
   onAddToPresentation,
   onDuplicate,
+  onBringToFront,
+  onSendToBack,
 }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -82,6 +86,9 @@ export function ContextMenu({
           <MenuItem label="Duplicar" shortcut="Ctrl+C/V" onClick={() => handleAction(() => onDuplicate([target.nodeId]))} />
           <MenuItem label="Adicionar à Apresentação" onClick={() => handleAction(() => onAddToPresentation(target.nodeId))} />
           <Separator />
+          <MenuItem label="Trazer para frente" onClick={() => handleAction(() => onBringToFront([target.nodeId]))} />
+          <MenuItem label="Enviar para trás" onClick={() => handleAction(() => onSendToBack([target.nodeId]))} />
+          <Separator />
           <MenuItem label="Excluir Card" shortcut="Del" danger onClick={() => handleAction(() => onDeleteItems([target.nodeId], []))} />
         </>
       )}
@@ -91,6 +98,9 @@ export function ContextMenu({
           <MenuItem label="Duplicar" shortcut="Ctrl+C/V" onClick={() => handleAction(() => onDuplicate([target.nodeId]))} />
           <MenuItem label="Adicionar à Apresentação" onClick={() => handleAction(() => onAddToPresentation(target.nodeId))} />
           <Separator />
+          <MenuItem label="Trazer para frente" onClick={() => handleAction(() => onBringToFront([target.nodeId]))} />
+          <MenuItem label="Enviar para trás" onClick={() => handleAction(() => onSendToBack([target.nodeId]))} />
+          <Separator />
           <MenuItem label="Excluir Nota" shortcut="Del" danger onClick={() => handleAction(() => onDeleteItems([target.nodeId], []))} />
         </>
       )}
@@ -99,6 +109,9 @@ export function ContextMenu({
         <>
           <MenuItem label="Duplicar" shortcut="Ctrl+C/V" onClick={() => handleAction(() => onDuplicate([target.nodeId]))} />
           <MenuItem label="Adicionar à Apresentação" onClick={() => handleAction(() => onAddToPresentation(target.nodeId))} />
+          <Separator />
+          <MenuItem label="Trazer para frente" onClick={() => handleAction(() => onBringToFront([target.nodeId]))} />
+          <MenuItem label="Enviar para trás" onClick={() => handleAction(() => onSendToBack([target.nodeId]))} />
           <Separator />
           <MenuItem label="Excluir Frame" shortcut="Del" danger onClick={() => handleAction(() => onDeleteItems([target.nodeId], []))} />
         </>
@@ -123,6 +136,9 @@ export function ContextMenu({
             label="Agrupar em Frame"
             onClick={() => handleAction(() => onWrapInFrame(target.nodeIds))}
           />
+          <Separator />
+          <MenuItem label="Trazer para frente" onClick={() => handleAction(() => onBringToFront(target.nodeIds))} />
+          <MenuItem label="Enviar para trás" onClick={() => handleAction(() => onSendToBack(target.nodeIds))} />
           <Separator />
           <MenuItem
             label={`Excluir ${target.nodeIds.length + target.edgeIds.length} itens`}
