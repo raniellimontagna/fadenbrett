@@ -45,6 +45,7 @@ export default function App() {
   const setTheme = useBoardStore((s) => s.setTheme)
 
   const activeBoardName = boards[activeBoardId]?.name ?? 'Board'
+  const activeBoardColor = boards[activeBoardId]?.color ?? ''
 
   const handleSearchKey = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -102,6 +103,13 @@ export default function App() {
             <span className="hidden max-w-[80px] truncate text-xs text-fadenbrett-muted sm:block" title={activeBoardName}>
               / {activeBoardName}
             </span>
+            {activeBoardColor && (
+              <span
+                className="hidden h-2 w-2 shrink-0 rounded-full sm:block"
+                style={{ backgroundColor: activeBoardColor }}
+                title={activeBoardName}
+              />
+            )}
           </div>
 
           {/* Search */}

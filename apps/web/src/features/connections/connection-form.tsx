@@ -3,9 +3,12 @@ import {
   type ConnectionData,
   type ConnectionStyle,
   type RouteType,
+  type ConnectionDirection,
   CONNECTION_STYLES,
   CONNECTION_COLORS,
   ROUTE_TYPES,
+  DIRECTION_TYPES,
+  RELATION_TYPES,
 } from './types'
 
 interface ConnectionFormProps {
@@ -21,13 +24,30 @@ export function ConnectionForm({ initial, onSave, onCancel, onDelete }: Connecti
   const [color, setColor] = useState(initial.color)
   const [routeType, setRouteType] = useState<RouteType>(initial.routeType ?? 'bezier')
   const [curvature, setCurvature] = useState(Math.round((initial.curvature ?? 0.3) * 100))
+  const [direction, setDirection] = useState<ConnectionDirection>(initial.direction ?? 'none')
+  const [relationType, setRelationType] = useState<string | undefined>(initial.relationType)
+
+  function applyRelationType(id: string) {
+    const rt = RELATION_TYPES.find((r) => r.id === id)
+    if (!rt) {
+      setRelationType(undefined)
+      return
+    }
+    setRelationType(rt.id)
+    // Auto-fill label (if currently empty or matches another relation type's label)
+    const currentIsRelationLabel = RELATION_TYPES.some((r) => r.label === label)
+    if (!label || currentIsRelationLabel) setLabel(rt.label)
+    // Auto-fill color
+    setColor(rt.defaultColor)
+    setStyle(rt.defaultStyle)
+  }
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
-      onSave({ label, style, color, routeType, curvature: curvature / 100 })
+      onSave({ label, style, color, routeType, curvature: curvature / 100, direction, relationType })
     },
-    [label, style, color, routeType, curvature, onSave],
+    [label, style, color, routeType, curvature, direction, relationType, onSave],
   )
 
   return (
@@ -38,9 +58,41 @@ export function ConnectionForm({ initial, onSave, onCancel, onDelete }: Connecti
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
-        className="w-full rounded-t-2xl border-t border-fadenbrett-muted/30 bg-fadenbrett-surface p-4 shadow-xl sm:w-80 sm:rounded-lg sm:border"
+        className="max-h-[90svh] w-full overflow-y-auto rounded-t-2xl border-t border-fadenbrett-muted/30 bg-fadenbrett-surface p-4 shadow-xl sm:w-80 sm:rounded-lg sm:border"
       >
         <h2 className="mb-4 text-sm font-semibold text-fadenbrett-text">Edit Connection</h2>
+
+        {/* Relation type presets */}
+        <div className="mb-3">
+          <label className="mb-1 block text-xs text-fadenbrett-muted">Tipo de relação</label>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => { setRelationType(undefined) }}
+              className={`rounded border px-2 py-1 text-xs transition-colors ${
+                !relationType
+                  ? 'border-fadenbrett-accent bg-fadenbrett-accent/20 text-fadenbrett-text'
+                  : 'border-fadenbrett-muted/30 text-fadenbrett-muted hover:border-fadenbrett-muted/60'
+              }`}
+            >
+              Custom
+            </button>
+            {RELATION_TYPES.map((rt) => (
+              <button
+                key={rt.id}
+                type="button"
+                onClick={() => applyRelationType(rt.id)}
+                className={`rounded border px-2 py-1 text-xs transition-colors ${
+                  relationType === rt.id
+                    ? 'border-fadenbrett-accent bg-fadenbrett-accent/20 text-fadenbrett-text'
+                    : 'border-fadenbrett-muted/30 text-fadenbrett-muted hover:border-fadenbrett-muted/60'
+                }`}
+              >
+                {rt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="mb-3">
           <label className="mb-1 block text-xs text-fadenbrett-muted">Label</label>
@@ -52,6 +104,28 @@ export function ConnectionForm({ initial, onSave, onCancel, onDelete }: Connecti
             className="w-full rounded border border-fadenbrett-muted/30 bg-fadenbrett-bg px-2 py-1.5 text-sm text-fadenbrett-text outline-none focus:border-fadenbrett-accent"
             autoFocus
           />
+        </div>
+
+        {/* Direction */}
+        <div className="mb-3">
+          <label className="mb-1 block text-xs text-fadenbrett-muted">Direção</label>
+          <div className="flex gap-1.5">
+            {DIRECTION_TYPES.map((d) => (
+              <button
+                key={d.value}
+                type="button"
+                title={d.title}
+                onClick={() => setDirection(d.value)}
+                className={`flex-1 rounded border px-2 py-1.5 text-xs font-mono transition-colors ${
+                  direction === d.value
+                    ? 'border-fadenbrett-accent bg-fadenbrett-accent/20 text-fadenbrett-text'
+                    : 'border-fadenbrett-muted/30 text-fadenbrett-muted hover:border-fadenbrett-muted/60'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="mb-3">

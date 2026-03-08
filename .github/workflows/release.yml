@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: [Release Please]
+    types: [completed]
     branches: [main]
 
 concurrency:
@@ -17,6 +19,7 @@ jobs:
   docker-build-push:
     name: Build & Push Docker images
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       packages: write
@@ -34,30 +37,59 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Get latest release tag
+        id: version
+        run: |
+          TAG=$(gh release view --json tagName -q '.tagName' 2>/dev/null || echo "")
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ -n "$TAG" ]; then
+            echo "has_version=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_version=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # ── Web image ─────────────────────────────────────────────────────────
+      - name: Docker meta (web)
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_WEB }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+            type=raw,value=${{ steps.version.outputs.tag }},enable=${{ steps.version.outputs.has_version }}
+
       - name: Build & push web image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/web/Dockerfile
           push: true
-          tags: |
-            ${{ env.IMAGE_WEB }}:latest
-            ${{ env.IMAGE_WEB }}:${{ github.sha }}
+          tags: ${{ steps.meta-web.outputs.tags }}
           cache-from: type=registry,ref=${{ env.IMAGE_WEB }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_WEB }}:buildcache,mode=max
           build-args: |
             VITE_API_URL=
 
       # ── API image ──────────────────────────────────────────────────────────
+      - name: Docker meta (api)
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_API }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+            type=raw,value=${{ steps.version.outputs.tag }},enable=${{ steps.version.outputs.has_version }}
+
       - name: Build & push api image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/api/Dockerfile
           push: true
-          tags: |
-            ${{ env.IMAGE_API }}:latest
-            ${{ env.IMAGE_API }}:${{ github.sha }}
+          tags: ${{ steps.meta-api.outputs.tags }}
           cache-from: type=registry,ref=${{ env.IMAGE_API }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_API }}:buildcache,mode=max

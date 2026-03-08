@@ -3,10 +3,14 @@ import { z } from 'zod';
 export const CreateBoardSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1).max(200),
+  description: z.string().max(200).default(''),
+  color: z.string().max(20).default(''),
 });
 
 export const UpdateBoardSchema = z.object({
   name: z.string().min(1).max(200).optional(),
+  description: z.string().max(200).optional(),
+  color: z.string().max(20).optional(),
 });
 
 export const CreateCardSchema = z.object({

@@ -22,6 +22,7 @@ import {
   apiRenameBoard,
   apiDeleteBoard,
   apiAutosave,
+  apiUpdateBoard,
   type ApiBoard,
 } from '../lib/api-client'
 
@@ -99,6 +100,8 @@ const debouncedApiSave = makeDebounced(
 export interface BoardEntry {
   id: string
   name: string
+  description?: string
+  color?: string
   nodes: Node[]
   edges: Edge[]
 }
@@ -114,8 +117,8 @@ const EMPTY_FILTERS: ActiveFilters = { groups: [], tags: [], eras: [], connectio
 
 const DEFAULT_BOARD_ID = 'board-default'
 
-function makeBoard(name = 'Board 1', id = DEFAULT_BOARD_ID): BoardEntry {
-  return { id, name, nodes: [], edges: [] }
+function makeBoard(name = 'Board 1', id = DEFAULT_BOARD_ID, description = '', color = ''): BoardEntry {
+  return { id, name, description, color, nodes: [], edges: [] }
 }
 
 // ---------------------------------------------------------------------------
@@ -123,12 +126,14 @@ function makeBoard(name = 'Board 1', id = DEFAULT_BOARD_ID): BoardEntry {
 // ---------------------------------------------------------------------------
 
 function snapshotToBoard(apiBoard: ApiBoard, id: string, name: string): BoardEntry {
-  if (!apiBoard.snapshot) return makeBoard(name, id)
+  const description = apiBoard.description ?? ''
+  const color = apiBoard.color ?? ''
+  if (!apiBoard.snapshot) return { id, name, description, color, nodes: [], edges: [] }
   try {
     const parsed = JSON.parse(apiBoard.snapshot) as { nodes?: Node[]; edges?: Edge[] }
-    return { id, name, nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] }
+    return { id, name, description, color, nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] }
   } catch {
-    return makeBoard(name, id)
+    return { id, name, description, color, nodes: [], edges: [] }
   }
 }
 
@@ -142,9 +147,10 @@ export interface BoardState {
   // Multi-board
   boards: Record<string, BoardEntry>
   activeBoardId: string
-  createBoard: (name: string) => string
+  createBoard: (name: string, description?: string, color?: string) => string
   deleteBoard: (id: string) => void
   renameBoard: (id: string, name: string) => void
+  updateBoardMeta: (id: string, data: { name?: string; description?: string; color?: string }) => void
   switchBoard: (id: string) => void
   // Active board data (mirrors boards[activeBoardId])
   nodes: Node[]
@@ -259,18 +265,24 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   boards: { 'board-default': makeBoard() },
   activeBoardId: initActiveBoardId,
 
-  createBoard: (name) => {
+  createBoard: (name, description?, color?) => {
     const id = `board-${generateId()}`
     const state = get()
     const updatedBoards = {
       ...state.boards,
       [state.activeBoardId]: { ...state.boards[state.activeBoardId], nodes: state.nodes, edges: state.edges },
-      [id]: makeBoard(name, id),
+      [id]: makeBoard(name, id, description ?? '', color ?? ''),
     }
     set({ boards: updatedBoards, activeBoardId: id, nodes: [], edges: [], selectedCardId: null, activeFilters: EMPTY_FILTERS })
     lsSet('fadenbrett-active-board', id)
-    apiCreateBoard(name, id).catch(() => {/* ignore */})
+    apiCreateBoard(name, id, description, color).catch(() => {/* ignore */})
     return id
+  },
+
+  updateBoardMeta: (id, data) => {
+    const state = get()
+    set({ boards: { ...state.boards, [id]: { ...state.boards[id], ...data } } })
+    apiUpdateBoard(id, data).catch(() => {/* ignore */})
   },
 
   deleteBoard: (id) => {

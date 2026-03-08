@@ -93,4 +93,14 @@ export function runMigrations(): void {
   if (!colNames.has('curvature')) {
     sqlite.exec('ALTER TABLE connections ADD COLUMN curvature REAL NOT NULL DEFAULT 0.3');
   }
+
+  // S038: Add description and color columns to boards
+  const boardCols = sqlite.prepare("PRAGMA table_info('boards')").all() as { name: string }[];
+  const boardColNames = new Set(boardCols.map((c) => c.name));
+  if (!boardColNames.has('description')) {
+    sqlite.exec("ALTER TABLE boards ADD COLUMN description TEXT DEFAULT ''");
+  }
+  if (!boardColNames.has('color')) {
+    sqlite.exec("ALTER TABLE boards ADD COLUMN color TEXT DEFAULT ''");
+  }
 }

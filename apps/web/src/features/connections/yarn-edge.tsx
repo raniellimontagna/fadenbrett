@@ -26,7 +26,7 @@ function YarnEdgeComponent({
     ...DEFAULT_CONNECTION_DATA,
     ...(data as unknown as Partial<ConnectionData>),
   }
-  const { label, style: lineStyle, color, routeType, curvature } = connectionData
+  const { label, style: lineStyle, color, routeType, curvature, direction } = connectionData
 
   const pathParams = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }
 
@@ -44,6 +44,10 @@ function YarnEdgeComponent({
 
   const strokeDasharray =
     lineStyle === 'dashed' ? '8 4' : lineStyle === 'dotted' ? '2 4' : undefined
+
+  // Build marker flags based on direction
+  const markerEnd = direction === 'forward' || direction === 'both'
+  const markerStart = direction === 'backward' || direction === 'both'
 
   // Draggable curvature handle (only for bezier when selected)
   const updateConnection = useBoardStore((s) => s.updateConnection)
@@ -78,11 +82,46 @@ function YarnEdgeComponent({
     [curvature, id, updateConnection],
   )
 
+  const colorId = color.replace(/[^a-zA-Z0-9]/g, '')
+  const markerEndId = `yarn-arrow-end-${colorId}`
+  const markerStartId = `yarn-arrow-start-${colorId}`
+
   return (
     <>
+      {/* Inline SVG marker definitions (rendered inside the RF SVG via g element) */}
+      <defs>
+        {markerEnd && (
+          <marker
+            id={markerEndId}
+            markerWidth="6"
+            markerHeight="6"
+            refX="5"
+            refY="3"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <path d="M0,0 L0,6 L6,3 z" fill={color} />
+          </marker>
+        )}
+        {markerStart && (
+          <marker
+            id={markerStartId}
+            markerWidth="6"
+            markerHeight="6"
+            refX="1"
+            refY="3"
+            orient="auto-start-reverse"
+            markerUnits="strokeWidth"
+          >
+            <path d="M0,0 L0,6 L6,3 z" fill={color} />
+          </marker>
+        )}
+      </defs>
       <BaseEdge
         id={id}
         path={edgePath}
+        markerEnd={markerEnd ? `url(#${markerEndId})` : undefined}
+        markerStart={markerStart ? `url(#${markerStartId})` : undefined}
         style={{
           stroke: color,
           strokeWidth: selected ? 3 : 2,

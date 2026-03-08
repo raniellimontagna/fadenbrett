@@ -3,6 +3,8 @@ import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 export const boards = sqliteTable('boards', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
+  description: text('description').default(''),
+  color: text('color').default(''),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   snapshot: text('snapshot'), // full JSON snapshot for autosave

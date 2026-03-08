@@ -603,3 +603,6 @@
   - Global keyboard handlers should be added via useEffect in App.tsx (not the canvas onKeyDown) for app-wide shortcuts
   - Desktop buttons go in the `hidden md:flex` div; mobile buttons go in the `mobileMenuOpen` conditional div
 ---
+--- Iteration 8 completed at sáb 07 mar 2026 20:50:35 -03 ---
+--- Iteration 9 completed at sáb 07 mar 2026 20:52:35 -03 ---
+--- Iteration 10 completed at sáb 07 mar 2026 20:52:39 -03 ---
