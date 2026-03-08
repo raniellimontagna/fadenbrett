@@ -10,7 +10,7 @@ function hasActiveFilters(f: ActiveFilters): boolean {
 type OpenMenu = 'groups' | 'tags' | 'eras' | 'connections' | null
 
 // ── Dropdown container with click-outside close ──────────────────────────────
-function Dropdown({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+function Dropdown({ onClose, children, position = 'bottom' }: { onClose: () => void; children: React.ReactNode; position?: 'top' | 'bottom' }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -21,10 +21,14 @@ function Dropdown({ onClose, children }: { onClose: () => void; children: React.
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
 
+  const positionClasses = position === 'top' 
+    ? 'bottom-full mb-1.5' 
+    : 'top-full mt-1.5'
+
   return (
     <div
       ref={ref}
-      className="absolute top-full left-0 z-50 mt-1.5 min-w-[180px] max-w-[240px] rounded-xl border border-fadenbrett-muted/20 bg-fadenbrett-surface shadow-xl"
+      className={`absolute left-0 z-50 min-w-[180px] max-w-[240px] rounded-xl border border-fadenbrett-muted/20 bg-fadenbrett-surface shadow-xl ${positionClasses}`}
     >
       {children}
     </div>
@@ -38,11 +42,12 @@ interface PillProps {
   open: boolean
   onClick: () => void
   children?: React.ReactNode
+  dropdownPosition?: 'top' | 'bottom'
 }
 
-function FilterPill({ label, activeCount, open, onClick, children }: PillProps) {
+function FilterPill({ label, activeCount, open, onClick, children, dropdownPosition }: PillProps) {
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
         onMouseDown={(e) => e.stopPropagation()}
         onClick={onClick}
@@ -56,12 +61,12 @@ function FilterPill({ label, activeCount, open, onClick, children }: PillProps) 
       >
         {label}
         {activeCount > 0 && (
-          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-fadenbrett-accent px-1 text-[10px] font-bold text-white leading-none">
+          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-fadenbrett-accent px-1 text-[10px] font-bold text-white leading-none">
             {activeCount}
           </span>
         )}
         <svg
-          className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`h-3 w-3 transition-transform ${open ? (dropdownPosition === 'top' ? 'rotate-0' : 'rotate-180') : (dropdownPosition === 'top' ? 'rotate-180' : '0')}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -80,6 +85,16 @@ function FilterPill({ label, activeCount, open, onClick, children }: PillProps) 
 export function FilterBar() {
   const { nodes, edges, activeFilters, toggleFilter, clearFilters } = useBoardStore()
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const dropdownPosition = isMobile ? 'top' : 'bottom'
 
   const cardNodes = useMemo(
     () => nodes.filter((n) => n.type === 'card').map((n) => n.data as unknown as CardData),
@@ -115,10 +130,12 @@ export function FilterBar() {
   }
 
   return (
-    <div
-      className="pointer-events-auto absolute top-3 left-1/2 z-10 -translate-x-1/2 flex items-center gap-1.5 rounded-xl border border-fadenbrett-muted/20 bg-fadenbrett-surface/90 px-2 py-1.5 shadow-lg backdrop-blur-sm"
+    <nav
+      className="pointer-events-auto absolute bottom-16 sm:bottom-auto sm:top-3 left-1/2 z-10 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-fit rounded-xl border border-fadenbrett-muted/20 bg-fadenbrett-surface/90 shadow-lg backdrop-blur-sm"
       onMouseDown={(e) => e.stopPropagation()}
+      aria-label="Filtros do board"
     >
+      <div className="flex items-center gap-1.5 overflow-x-auto px-2 py-1.5 scrollbar-none">
       {/* ── Grupo ── */}
       {availableGroups.length > 0 && (
         <FilterPill
@@ -126,8 +143,9 @@ export function FilterBar() {
           activeCount={activeFilters.groups.length}
           open={openMenu === 'groups'}
           onClick={() => toggle('groups')}
+          dropdownPosition={dropdownPosition}
         >
-          <Dropdown onClose={close}>
+          <Dropdown onClose={close} position={dropdownPosition}>
             <div className="p-2">
               <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Cor do grupo
@@ -166,8 +184,9 @@ export function FilterBar() {
           activeCount={activeFilters.tags.length}
           open={openMenu === 'tags'}
           onClick={() => toggle('tags')}
+          dropdownPosition={dropdownPosition}
         >
-          <Dropdown onClose={close}>
+          <Dropdown onClose={close} position={dropdownPosition}>
             <div className="flex max-h-56 flex-col overflow-hidden">
               <p className="shrink-0 px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Tags
@@ -210,8 +229,9 @@ export function FilterBar() {
           activeCount={activeFilters.eras.length}
           open={openMenu === 'eras'}
           onClick={() => toggle('eras')}
+          dropdownPosition={dropdownPosition}
         >
-          <Dropdown onClose={close}>
+          <Dropdown onClose={close} position={dropdownPosition}>
             <div className="flex max-h-56 flex-col overflow-hidden">
               <p className="shrink-0 px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Era / Período
@@ -254,8 +274,9 @@ export function FilterBar() {
           activeCount={activeFilters.connectionStyles.length}
           open={openMenu === 'connections'}
           onClick={() => toggle('connections')}
+          dropdownPosition={dropdownPosition}
         >
-          <Dropdown onClose={close}>
+          <Dropdown onClose={close} position={dropdownPosition}>
             <div className="p-2">
               <p className="mb-1 px-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Estilo
@@ -292,10 +313,10 @@ export function FilterBar() {
       {/* ── Clear all ── */}
       {isActive && (
         <>
-          <div className="h-4 w-px bg-fadenbrett-muted/20" />
+          <div className="h-4 w-px shrink-0 bg-fadenbrett-muted/20" />
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-fadenbrett-muted transition-colors hover:bg-fadenbrett-muted/10 hover:text-fadenbrett-text"
+            className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs text-fadenbrett-muted transition-colors hover:bg-fadenbrett-muted/10 hover:text-fadenbrett-text"
             title="Limpar todos os filtros"
           >
             <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -305,6 +326,7 @@ export function FilterBar() {
           </button>
         </>
       )}
-    </div>
+      </div>
+    </nav>
   )
 }

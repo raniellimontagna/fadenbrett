@@ -16,7 +16,9 @@ import { uploadRoutes } from './routes/upload.js';
 const PORT = Number(process.env.PORT ?? 3001);
 const HOST = process.env.HOST ?? '0.0.0.0';
 
-const app = Fastify({ logger: true });
+const TEN_MB = 10 * 1024 * 1024;
+
+const app = Fastify({ logger: true, bodyLimit: TEN_MB });
 
 // Plugins
 await app.register(cors, {

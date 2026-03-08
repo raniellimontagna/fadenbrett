@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const CreateBoardSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.string().optional(),
   name: z.string().min(1).max(200),
   description: z.string().max(200).default(''),
   color: z.string().max(20).default(''),
