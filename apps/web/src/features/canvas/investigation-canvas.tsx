@@ -72,6 +72,9 @@ export function InvestigationCanvas() {
     redo,
     addPresentationStop,
     presentationActive,
+    copySelected,
+    pasteClipboard,
+    duplicateNodes,
   } = useBoardStore()
   const { zoomIn, zoomOut, fitView, screenToFlowPosition } = useReactFlow()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -251,6 +254,10 @@ export function InvestigationCanvas() {
 
   const onPaneDoubleClick = useCallback(
     (event: React.MouseEvent) => {
+      // Ignore double-clicks on nodes/edges — those are handled by onNodeDoubleClick/onEdgeDoubleClick
+      const target = event.target as HTMLElement
+      if (target.closest('.react-flow__node') || target.closest('.react-flow__edge')) return
+
       const position = screenToFlowPosition({ x: event.clientX, y: event.clientY })
       if (event.shiftKey) {
         addNote(position)
@@ -536,11 +543,17 @@ export function InvestigationCanvas() {
       ) {
         event.preventDefault()
         redo()
+      } else if (event.key === 'c' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        copySelected()
+      } else if (event.key === 'v' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        pasteClipboard()
       } else if (event.key === 'Escape') {
         closeContextMenu()
       }
     },
-    [zoomIn, zoomOut, fitView, selectedNodes, selectedEdges, performDelete, closeContextMenu, saveNow, undo, redo],
+    [zoomIn, zoomOut, fitView, selectedNodes, selectedEdges, performDelete, closeContextMenu, saveNow, undo, redo, copySelected, pasteClipboard],
   )
 
   const confirmMessage = confirmDelete
@@ -595,7 +608,7 @@ export function InvestigationCanvas() {
       )}
 
       {/* Save status */}
-      <div className="pointer-events-none absolute bottom-16 left-3 z-10 flex items-center gap-1.5 rounded-md bg-fadenbrett-surface/70 px-2 py-1 text-[10px] text-fadenbrett-muted backdrop-blur-sm sm:bottom-3">
+      <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-md bg-fadenbrett-surface/70 px-2 py-1 text-[10px] text-fadenbrett-muted backdrop-blur-sm sm:bottom-40">
         <span className={`h-1.5 w-1.5 rounded-full ${lastSavedAt ? 'bg-green-500' : 'bg-fadenbrett-muted/40'}`} />
         {savedLabel}
       </div>
@@ -670,6 +683,7 @@ export function InvestigationCanvas() {
           onDeleteItems={performDelete}
           onEditConnection={handleContextEditConnection}
           onAddToPresentation={handleContextAddToPresentation}
+          onDuplicate={(nodeIds) => { duplicateNodes(nodeIds); closeContextMenu() }}
         />
       )}
 

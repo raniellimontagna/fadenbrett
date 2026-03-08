@@ -1,9 +1,10 @@
+import { useCallback, useRef, useState } from 'react'
 import { useBoardStore } from '../../store/board-store'
 
 function getNodeLabel(nodes: { id: string; type?: string; data: Record<string, unknown> }[], nodeId: string): string {
   const node = nodes.find((n) => n.id === nodeId)
   if (!node) return `Nó removido (${nodeId.slice(0, 6)})`
-  if (node.type === 'card') return String(node.data.name ?? 'Card sem título')
+  if (node.type === 'card') return String(node.data.title ?? 'Card sem título')
   if (node.type === 'frame') return String(node.data.title ?? 'Frame sem título')
   // note
   const content = String(node.data.content ?? '')
@@ -16,6 +17,24 @@ export function PresentationPanel() {
   const startPresentation = useBoardStore((s) => s.startPresentation)
   const removePresentationStop = useBoardStore((s) => s.removePresentationStop)
   const movePresentationStop = useBoardStore((s) => s.movePresentationStop)
+  const updatePresentationStopLabel = useBoardStore((s) => s.updatePresentationStopLabel)
+
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const startEditing = useCallback((stopId: string, currentLabel: string) => {
+    setEditingId(stopId)
+    setEditValue(currentLabel)
+    setTimeout(() => inputRef.current?.select(), 0)
+  }, [])
+
+  const commitEdit = useCallback(() => {
+    if (editingId) {
+      updatePresentationStopLabel(editingId, editValue.trim())
+      setEditingId(null)
+    }
+  }, [editingId, editValue, updatePresentationStopLabel])
 
   return (
     <div className="flex h-full flex-col gap-2 p-3">
@@ -44,9 +63,29 @@ export function PresentationPanel() {
               className="flex items-center gap-2 rounded-md bg-fadenbrett-surface/50 px-2 py-1.5 text-xs"
             >
               <span className="w-4 shrink-0 text-center font-mono text-fadenbrett-muted">{idx + 1}</span>
-              <span className="flex-1 truncate text-fadenbrett-text">
-                {stop.label ?? getNodeLabel(nodes, stop.nodeId)}
-              </span>
+              {editingId === stop.id ? (
+                <input
+                  ref={inputRef}
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onBlur={commitEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitEdit()
+                    if (e.key === 'Escape') setEditingId(null)
+                  }}
+                  className="flex-1 rounded border border-fadenbrett-accent/50 bg-fadenbrett-bg px-1 py-0.5 text-xs text-fadenbrett-text outline-none"
+                />
+              ) : (
+                <span
+                  className="flex-1 cursor-text truncate text-fadenbrett-text"
+                  onDoubleClick={() =>
+                    startEditing(stop.id, stop.label ?? getNodeLabel(nodes, stop.nodeId))
+                  }
+                  title="Clique duplo para renomear"
+                >
+                  {stop.label ?? getNodeLabel(nodes, stop.nodeId)}
+                </span>
+              )}
               <div className="flex shrink-0 gap-0.5">
                 <button
                   onClick={() => movePresentationStop(stop.id, 'up')}
@@ -54,7 +93,7 @@ export function PresentationPanel() {
                   className="rounded p-0.5 text-fadenbrett-muted hover:text-fadenbrett-text disabled:opacity-30"
                   title="Mover para cima"
                 >
-                  ↑
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
                 </button>
                 <button
                   onClick={() => movePresentationStop(stop.id, 'down')}
@@ -62,14 +101,14 @@ export function PresentationPanel() {
                   className="rounded p-0.5 text-fadenbrett-muted hover:text-fadenbrett-text disabled:opacity-30"
                   title="Mover para baixo"
                 >
-                  ↓
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                 </button>
                 <button
                   onClick={() => removePresentationStop(stop.id)}
                   className="rounded p-0.5 text-fadenbrett-muted hover:text-red-400"
                   title="Remover"
                 >
-                  ×
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
               </div>
             </li>

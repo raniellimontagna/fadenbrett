@@ -6,3 +6,7 @@ data
 *.log
 *.db
 .DS_Store
+CLAUDE.md
+prd.json
+progress.txt
+ralph/

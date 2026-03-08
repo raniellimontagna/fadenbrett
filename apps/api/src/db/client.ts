@@ -66,6 +66,8 @@ export function runMigrations(): void {
       label TEXT DEFAULT '',
       style TEXT NOT NULL DEFAULT 'solid',
       color TEXT NOT NULL DEFAULT '#a78bfa',
+      route_type TEXT NOT NULL DEFAULT 'bezier',
+      curvature REAL NOT NULL DEFAULT 0.3,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -81,4 +83,24 @@ export function runMigrations(): void {
       PRIMARY KEY (card_id, tag_id)
     );
   `);
+
+  // Incremental migrations for existing databases
+  const cols = sqlite.prepare("PRAGMA table_info('connections')").all() as { name: string }[];
+  const colNames = new Set(cols.map((c) => c.name));
+  if (!colNames.has('route_type')) {
+    sqlite.exec("ALTER TABLE connections ADD COLUMN route_type TEXT NOT NULL DEFAULT 'bezier'");
+  }
+  if (!colNames.has('curvature')) {
+    sqlite.exec('ALTER TABLE connections ADD COLUMN curvature REAL NOT NULL DEFAULT 0.3');
+  }
+
+  // S038: Add description and color columns to boards
+  const boardCols = sqlite.prepare("PRAGMA table_info('boards')").all() as { name: string }[];
+  const boardColNames = new Set(boardCols.map((c) => c.name));
+  if (!boardColNames.has('description')) {
+    sqlite.exec("ALTER TABLE boards ADD COLUMN description TEXT DEFAULT ''");
+  }
+  if (!boardColNames.has('color')) {
+    sqlite.exec("ALTER TABLE boards ADD COLUMN color TEXT DEFAULT ''");
+  }
 }

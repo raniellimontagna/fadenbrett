@@ -17,10 +17,10 @@ export async function boardRoutes(app: FastifyInstance): Promise<void> {
     if (!result.success) {
       return reply.status(400).send({ error: result.error.flatten() });
     }
-    const { id, name } = result.data;
+    const { id, name, description, color } = result.data;
     const boardId = id ?? crypto.randomUUID();
     const now = new Date().toISOString();
-    await db.insert(boards).values({ id: boardId, name, createdAt: now, updatedAt: now });
+    await db.insert(boards).values({ id: boardId, name, description, color, createdAt: now, updatedAt: now });
     const [row] = await db.select().from(boards).where(eq(boards.id, boardId));
     return reply.status(201).send(row);
   });

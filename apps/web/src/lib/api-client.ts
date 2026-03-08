@@ -24,6 +24,8 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 export interface ApiBoard {
   id: string
   name: string
+  description: string
+  color: string
   createdAt: string
   updatedAt: string
   snapshot: string | null
@@ -39,10 +41,10 @@ export interface ApiSnapshot {
 export const apiListBoards = (): Promise<ApiBoard[]> =>
   apiFetch('/api/boards')
 
-export const apiCreateBoard = (name: string, id?: string): Promise<ApiBoard> =>
+export const apiCreateBoard = (name: string, id?: string, description?: string, color?: string): Promise<ApiBoard> =>
   apiFetch('/api/boards', {
     method: 'POST',
-    body: JSON.stringify({ name, ...(id ? { id } : {}) }),
+    body: JSON.stringify({ name, ...(id ? { id } : {}), ...(description ? { description } : {}), ...(color ? { color } : {}) }),
   })
 
 export const apiGetBoard = (id: string): Promise<ApiBoard & { cards: unknown[]; notes: unknown[]; connections: unknown[] }> =>
@@ -52,6 +54,12 @@ export const apiRenameBoard = (id: string, name: string): Promise<ApiBoard> =>
   apiFetch(`/api/boards/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ name }),
+  })
+
+export const apiUpdateBoard = (id: string, data: { name?: string; description?: string; color?: string }): Promise<ApiBoard> =>
+  apiFetch(`/api/boards/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   })
 
 export const apiDeleteBoard = (id: string): Promise<void> =>

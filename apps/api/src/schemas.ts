@@ -3,10 +3,14 @@ import { z } from 'zod';
 export const CreateBoardSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1).max(200),
+  description: z.string().max(200).default(''),
+  color: z.string().max(20).default(''),
 });
 
 export const UpdateBoardSchema = z.object({
   name: z.string().min(1).max(200).optional(),
+  description: z.string().max(200).optional(),
+  color: z.string().max(20).optional(),
 });
 
 export const CreateCardSchema = z.object({
@@ -42,6 +46,8 @@ export const CreateConnectionSchema = z.object({
   label: z.string().default(''),
   style: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
   color: z.string().default('#a78bfa'),
+  routeType: z.enum(['bezier', 'straight', 'step']).default('bezier'),
+  curvature: z.number().min(0).max(1).default(0.3),
 });
 
 export const UpdateConnectionSchema = CreateConnectionSchema.partial().omit({ sourceId: true, targetId: true });

@@ -22,6 +22,7 @@ import {
   apiRenameBoard,
   apiDeleteBoard,
   apiAutosave,
+  apiUpdateBoard,
   type ApiBoard,
 } from '../lib/api-client'
 
@@ -99,6 +100,8 @@ const debouncedApiSave = makeDebounced(
 export interface BoardEntry {
   id: string
   name: string
+  description?: string
+  color?: string
   nodes: Node[]
   edges: Edge[]
 }
@@ -114,8 +117,8 @@ const EMPTY_FILTERS: ActiveFilters = { groups: [], tags: [], eras: [], connectio
 
 const DEFAULT_BOARD_ID = 'board-default'
 
-function makeBoard(name = 'Board 1', id = DEFAULT_BOARD_ID): BoardEntry {
-  return { id, name, nodes: [], edges: [] }
+function makeBoard(name = 'Board 1', id = DEFAULT_BOARD_ID, description = '', color = ''): BoardEntry {
+  return { id, name, description, color, nodes: [], edges: [] }
 }
 
 // ---------------------------------------------------------------------------
@@ -123,12 +126,14 @@ function makeBoard(name = 'Board 1', id = DEFAULT_BOARD_ID): BoardEntry {
 // ---------------------------------------------------------------------------
 
 function snapshotToBoard(apiBoard: ApiBoard, id: string, name: string): BoardEntry {
-  if (!apiBoard.snapshot) return makeBoard(name, id)
+  const description = apiBoard.description ?? ''
+  const color = apiBoard.color ?? ''
+  if (!apiBoard.snapshot) return { id, name, description, color, nodes: [], edges: [] }
   try {
     const parsed = JSON.parse(apiBoard.snapshot) as { nodes?: Node[]; edges?: Edge[] }
-    return { id, name, nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] }
+    return { id, name, description, color, nodes: parsed.nodes ?? [], edges: parsed.edges ?? [] }
   } catch {
-    return makeBoard(name, id)
+    return { id, name, description, color, nodes: [], edges: [] }
   }
 }
 
@@ -142,9 +147,10 @@ export interface BoardState {
   // Multi-board
   boards: Record<string, BoardEntry>
   activeBoardId: string
-  createBoard: (name: string) => string
+  createBoard: (name: string, description?: string, color?: string) => string
   deleteBoard: (id: string) => void
   renameBoard: (id: string, name: string) => void
+  updateBoardMeta: (id: string, data: { name?: string; description?: string; color?: string }) => void
   switchBoard: (id: string) => void
   // Active board data (mirrors boards[activeBoardId])
   nodes: Node[]
@@ -198,6 +204,7 @@ export interface BoardState {
   addPresentationStop: (nodeId: string, label?: string) => void
   removePresentationStop: (stopId: string) => void
   movePresentationStop: (stopId: string, direction: 'up' | 'down') => void
+  updatePresentationStopLabel: (stopId: string, label: string) => void
   startPresentation: () => void
   exitPresentation: () => void
   nextStop: () => void
@@ -210,6 +217,11 @@ export interface BoardState {
   stopCollab: () => void
   sendCursorMove: (cursor: { x: number; y: number }) => void
   setLocalUserName: (name: string) => void
+  // Clipboard (copy/paste)
+  clipboard: { nodes: Node[]; edges: Edge[] } | null
+  copySelected: () => void
+  pasteClipboard: () => void
+  duplicateNodes: (nodeIds: string[]) => void
   // Templates
   applyTemplate: (name: string, nodes: Node[], edges: Edge[]) => void
 }
@@ -253,18 +265,24 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   boards: { 'board-default': makeBoard() },
   activeBoardId: initActiveBoardId,
 
-  createBoard: (name) => {
+  createBoard: (name, description?, color?) => {
     const id = `board-${generateId()}`
     const state = get()
     const updatedBoards = {
       ...state.boards,
       [state.activeBoardId]: { ...state.boards[state.activeBoardId], nodes: state.nodes, edges: state.edges },
-      [id]: makeBoard(name, id),
+      [id]: makeBoard(name, id, description ?? '', color ?? ''),
     }
     set({ boards: updatedBoards, activeBoardId: id, nodes: [], edges: [], selectedCardId: null, activeFilters: EMPTY_FILTERS })
     lsSet('fadenbrett-active-board', id)
-    apiCreateBoard(name, id).catch(() => {/* ignore */})
+    apiCreateBoard(name, id, description, color).catch(() => {/* ignore */})
     return id
+  },
+
+  updateBoardMeta: (id, data) => {
+    const state = get()
+    set({ boards: { ...state.boards, [id]: { ...state.boards[id], ...data } } })
+    apiUpdateBoard(id, data).catch(() => {/* ignore */})
   },
 
   deleteBoard: (id) => {
@@ -584,6 +602,14 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     lsSet('fadenbrett-presentation', stops)
   },
 
+  updatePresentationStopLabel: (stopId, label) => {
+    const next = get().presentationStops.map((s) =>
+      s.id === stopId ? { ...s, label: label || undefined } : s,
+    )
+    set({ presentationStops: next })
+    lsSet('fadenbrett-presentation', next)
+  },
+
   startPresentation: () => {
     if (get().presentationStops.length === 0) return
     set({ presentationActive: true, presentationIndex: 0 })
@@ -667,6 +693,72 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     set({ localUser: user })
     const { collaborating, activeBoardId } = get()
     if (collaborating) collabChannel.send({ type: 'presence', boardId: activeBoardId, user })
+  },
+
+  // --- Clipboard (copy/paste) ---
+  clipboard: null,
+
+  copySelected: () => {
+    const { nodes, edges } = get()
+    const selected = nodes.filter((n) => n.selected)
+    if (selected.length === 0) return
+    const selectedIds = new Set(selected.map((n) => n.id))
+    const internalEdges = edges.filter((e) => selectedIds.has(e.source) && selectedIds.has(e.target))
+    set({ clipboard: { nodes: selected, edges: internalEdges } })
+  },
+
+  pasteClipboard: () => {
+    const { clipboard } = get()
+    if (!clipboard || clipboard.nodes.length === 0) return
+    get().pushHistory()
+    const idMap = new Map<string, string>()
+    clipboard.nodes.forEach((n) => idMap.set(n.id, generateId()))
+    const newNodes: Node[] = clipboard.nodes.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      position: { x: n.position.x + 40, y: n.position.y + 40 },
+      selected: true,
+      data: { ...n.data, id: idMap.get(n.id)! },
+      ...(n.parentId && idMap.has(n.parentId) ? { parentId: idMap.get(n.parentId)! } : {}),
+    }))
+    const newEdges: Edge[] = clipboard.edges.map((e) => ({
+      ...e,
+      id: `e-${generateId()}`,
+      source: idMap.get(e.source) ?? e.source,
+      target: idMap.get(e.target) ?? e.target,
+    }))
+    // Deselect current nodes
+    const deselected = get().nodes.map((n) => (n.selected ? { ...n, selected: false } : n))
+    const deselectedEdges = get().edges.map((e) => (e.selected ? { ...e, selected: false } : e))
+    set({ nodes: [...deselected, ...newNodes], edges: [...deselectedEdges, ...newEdges] })
+  },
+
+  duplicateNodes: (nodeIds) => {
+    const { nodes, edges } = get()
+    const toDuplicate = nodes.filter((n) => nodeIds.includes(n.id))
+    if (toDuplicate.length === 0) return
+    const selectedIds = new Set(nodeIds)
+    const internalEdges = edges.filter((e) => selectedIds.has(e.source) && selectedIds.has(e.target))
+    get().pushHistory()
+    const idMap = new Map<string, string>()
+    toDuplicate.forEach((n) => idMap.set(n.id, generateId()))
+    const newNodes: Node[] = toDuplicate.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      position: { x: n.position.x + 40, y: n.position.y + 40 },
+      selected: true,
+      data: { ...n.data, id: idMap.get(n.id)! },
+      ...(n.parentId && idMap.has(n.parentId) ? { parentId: idMap.get(n.parentId)! } : {}),
+    }))
+    const newEdges: Edge[] = internalEdges.map((e) => ({
+      ...e,
+      id: `e-${generateId()}`,
+      source: idMap.get(e.source) ?? e.source,
+      target: idMap.get(e.target) ?? e.target,
+    }))
+    const deselected = nodes.map((n) => (n.selected ? { ...n, selected: false } : n))
+    const deselectedEdges = edges.map((e) => (e.selected ? { ...e, selected: false } : e))
+    set({ nodes: [...deselected, ...newNodes], edges: [...deselectedEdges, ...newEdges] })
   },
 
   applyTemplate: (name, nodes, edges) => {

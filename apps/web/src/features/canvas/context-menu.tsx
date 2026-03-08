@@ -23,6 +23,7 @@ interface ContextMenuProps {
   onDeleteItems: (nodeIds: string[], edgeIds: string[]) => void
   onEditConnection: (edgeId: string) => void
   onAddToPresentation: (nodeId: string) => void
+  onDuplicate: (nodeIds: string[]) => void
 }
 
 export function ContextMenu({
@@ -36,6 +37,7 @@ export function ContextMenu({
   onDeleteItems,
   onEditConnection,
   onAddToPresentation,
+  onDuplicate,
 }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -77,6 +79,7 @@ export function ContextMenu({
       {target.type === 'card' && (
         <>
           <MenuItem label="Editar Card" shortcut="Dbl-click" onClick={() => handleAction(() => onEditCard(target.nodeId))} />
+          <MenuItem label="Duplicar" shortcut="Ctrl+C/V" onClick={() => handleAction(() => onDuplicate([target.nodeId]))} />
           <MenuItem label="Adicionar à Apresentação" onClick={() => handleAction(() => onAddToPresentation(target.nodeId))} />
           <Separator />
           <MenuItem label="Excluir Card" shortcut="Del" danger onClick={() => handleAction(() => onDeleteItems([target.nodeId], []))} />
@@ -85,6 +88,7 @@ export function ContextMenu({
 
       {target.type === 'note' && (
         <>
+          <MenuItem label="Duplicar" shortcut="Ctrl+C/V" onClick={() => handleAction(() => onDuplicate([target.nodeId]))} />
           <MenuItem label="Adicionar à Apresentação" onClick={() => handleAction(() => onAddToPresentation(target.nodeId))} />
           <Separator />
           <MenuItem label="Excluir Nota" shortcut="Del" danger onClick={() => handleAction(() => onDeleteItems([target.nodeId], []))} />
@@ -93,6 +97,7 @@ export function ContextMenu({
 
       {target.type === 'frame' && (
         <>
+          <MenuItem label="Duplicar" shortcut="Ctrl+C/V" onClick={() => handleAction(() => onDuplicate([target.nodeId]))} />
           <MenuItem label="Adicionar à Apresentação" onClick={() => handleAction(() => onAddToPresentation(target.nodeId))} />
           <Separator />
           <MenuItem label="Excluir Frame" shortcut="Del" danger onClick={() => handleAction(() => onDeleteItems([target.nodeId], []))} />
@@ -109,6 +114,11 @@ export function ContextMenu({
 
       {target.type === 'selection' && (
         <>
+          <MenuItem
+            label="Duplicar"
+            shortcut="Ctrl+C/V"
+            onClick={() => handleAction(() => onDuplicate(target.nodeIds))}
+          />
           <MenuItem
             label="Agrupar em Frame"
             onClick={() => handleAction(() => onWrapInFrame(target.nodeIds))}
