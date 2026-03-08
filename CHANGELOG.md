@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/raniellimontagna/fadenbrett/compare/v1.0.0...v1.1.0) (2026-03-08)
+
+
+### Features
+
+* enhances export, increases limits, and improves ui responsiveness ([6b20893](https://github.com/raniellimontagna/fadenbrett/commit/6b20893ea4d6e4061b662d95bdc58987d1f73b84))
+* S040 layer ordering (bring to front/send to back) and S041 virtual rulers ([8d2871e](https://github.com/raniellimontagna/fadenbrett/commit/8d2871e54201f65f6325c5158fd4aa8c042c6fa0))
+* s040 s041 layer order rulers ([5093d92](https://github.com/raniellimontagna/fadenbrett/commit/5093d924ec753b1196dc4b4710c05c889d10e2ca))
+
 ## 1.0.0 (2026-03-08)
 
 
