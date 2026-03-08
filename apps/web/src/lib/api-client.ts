@@ -81,7 +81,7 @@ export const apiExportBoard = (id: string): Promise<unknown> =>
 export async function apiUploadImage(file: File): Promise<string> {
   const form = new FormData()
   form.append('file', file)
-  const res = await fetch(`${BASE_URL}/upload`, { method: 'POST', body: form })
+  const res = await fetch(`${BASE_URL}/api/upload`, { method: 'POST', body: form })
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText)
     throw new Error(`Upload falhou ${res.status}: ${text}`)

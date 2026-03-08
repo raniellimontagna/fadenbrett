@@ -45,10 +45,8 @@ await app.register(async (api) => {
   await api.register(cardRoutes);
   await api.register(noteRoutes);
   await api.register(connectionRoutes);
+  await api.register(uploadRoutes);
 }, { prefix: '/api' });
-
-// Upload endpoint
-await app.register(uploadRoutes);
 
 // WebSocket collaboration rooms under /ws
 await app.register(async (ws) => {
