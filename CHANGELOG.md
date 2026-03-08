@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/raniellimontagna/fadenbrett/compare/v1.1.0...v1.2.0) (2026-03-08)
+
+
+### Features
+
+* adds board duplication and edge reconnection ([7bea4c0](https://github.com/raniellimontagna/fadenbrett/commit/7bea4c05962c7844c2ce55e89f1eaee44578ac47))
+
+
+### Bug Fixes
+
+* standardizes upload endpoint path ([7b2ba19](https://github.com/raniellimontagna/fadenbrett/commit/7b2ba19a4f373d57df3573704249575ae80e94d7))
+
 ## [1.1.0](https://github.com/raniellimontagna/fadenbrett/compare/v1.0.0...v1.1.0) (2026-03-08)
 
 
