@@ -1344,7 +1344,7 @@
       "phase": "Melhorias v2",
       "priority": 38,
       "priorityLabel": "P2",
-      "passes": false,
+      "passes": true,
       "description": "Boards atualmente tem apenas nome. Adicionar descricao curta e cor de identificacao visual permite organizar multiplos boards por temporada/arco de forma mais intuitiva na sidebar.",
       "userStories": [
         "Como usuario com multiplos boards, quero ver cores diferentes para identificar rapidamente 'Temporada 1', 'Temporada 2' etc.",
@@ -1371,7 +1371,7 @@
       "phase": "Melhorias v2",
       "priority": 39,
       "priorityLabel": "P2",
-      "passes": false,
+      "passes": true,
       "description": "Conexoes atuais nao tem seta de direcao visivel nem tipo de relacao predefinido. Para investigacao narrativa, saber qual a direcao (A para B) e o tipo (familia, suspeito, aliado) e critico para entender o grafo.",
       "userStories": [
         "Como usuario, quero ver setas direcionais nas conexoes para entender quem influencia quem.",

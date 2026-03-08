@@ -18,6 +18,8 @@
 - S025: WebSocket route: `{ websocket: true }` option + scoped plugin under `/ws` prefix; pure rebroadcast server — no state stored server-side; `@types/ws` required as dev dep for collab.ts typing
 - S026: `@fastify/multipart` file upload: use `req.file()` + `for await` chunk collection; never use `apiFetch` for multipart (it overrides Content-Type); `@fastify/static` for serving uploads static dir
 - S035: For incremental DB migrations, use `PRAGMA table_info('table')` to check existing columns, then `ALTER TABLE ADD COLUMN` for new ones — keeps backward compat with existing DBs
+- S038/S039: For custom colored arrowheads on React Flow edges, use inline SVG `<defs><marker>` inside the edge component — do NOT use `MarkerType` from @xyflow/react (it doesn't support per-color)
+- S038/S039: When replacing full component files via surgical edits, always verify final line count with `wc -l` before committing to catch leftover duplicate code
 - S027: Docker multi-stage for api requires `python3 make g++` for better-sqlite3 native bindings even in runner stage; `VITE_API_URL=""` needs WS URL derived from `window.location` since WebSocket requires absolute URL
 - S028: GitHub Actions with pnpm — `pnpm/action-setup@v4` must come before `actions/setup-node@v4`; `permissions: packages: write` needed for ghcr.io push with GITHUB_TOKEN
 - S029: Proxmox LXC scripts — `features: nesting=1` required for Docker inside unprivileged LXC; use `pvesh get /cluster/nextid` for CT_ID; `pveam available --section system | sort -V` to get latest template
@@ -606,3 +608,39 @@
 --- Iteration 8 completed at sáb 07 mar 2026 20:50:35 -03 ---
 --- Iteration 9 completed at sáb 07 mar 2026 20:52:35 -03 ---
 --- Iteration 10 completed at sáb 07 mar 2026 20:52:39 -03 ---
+
+## 2025-07-14 - S038
+- What was implemented: Board personalization — description and color identifier
+  - `BoardEntry` interface extended with `description?: string` and `color?: string`
+  - `makeBoard`, `snapshotToBoard`, `createBoard` updated to propagate description/color
+  - New `updateBoardMeta(id, patch)` action in store calls `apiUpdateBoard`
+  - `board-sidebar.tsx` fully rewritten: replaced `prompt()` with `BoardModal` component (name + description textarea + 8-color picker with "no color" option)
+  - Board list items show colored bar (4px tall) on the left when color is set, plus a subtitle showing description (line-clamp-1)
+  - Pencil icon opens pre-filled edit modal; trash icon deletes; "Novo board" button opens create modal
+  - `App.tsx` header: colored dot next to board name when active board has a color set
+- Files changed:
+  - `apps/web/src/store/board-store.ts`
+  - `apps/web/src/App.tsx`
+  - `apps/web/src/features/canvas/board-sidebar.tsx`
+- **Learnings for future iterations:**
+  - `apiUpdateBoard` already existed and accepted `{ name?, description?, color? }` — no backend changes needed for S038
+  - DB schema (`boards` table) already had `description TEXT` and `color TEXT` columns added in S035
+  - When replacing entire component files via surgical edits, confirm final line count with `wc -l` before committing
+---
+
+## 2025-07-14 - S039
+- What was implemented: Directional arrows and predefined relation type presets on connections
+  - `connections/types.ts`: Added `ConnectionDirection` type, `DIRECTION_TYPES` array (4 options), `RelationType` interface, `RELATION_TYPES` array (6 presets: Família/Romance/Suspeito/Aliado/Inimigo/Desconhecido)
+  - `ConnectionData` extended with `direction: ConnectionDirection` and `relationType?: string`
+  - `connection-form.tsx` rewritten: relation type preset buttons (auto-fill label/color/style), direction selector (—, A→B, A←B, A↔B)
+  - `yarn-edge.tsx`: inline SVG `<defs><marker>` elements for arrowheads; conditional render based on `markerEnd`/`markerStart` booleans derived from `direction`; color-matched arrows using unique marker IDs
+- Files changed:
+  - `apps/web/src/features/connections/types.ts`
+  - `apps/web/src/features/connections/connection-form.tsx`
+  - `apps/web/src/features/connections/yarn-edge.tsx`
+- **Learnings for future iterations:**
+  - Do NOT use `MarkerType` from `@xyflow/react` for custom colored arrowheads — use inline SVG `<defs><marker>` inside the edge component (React Flow renders edges inside an SVG)
+  - Marker IDs must be unique per color to avoid all arrows using the same color; use `color.replace(/[^a-zA-Z0-9]/g, '')` as ID suffix
+  - `direction` stored in JSON snapshot (autosave) — no DB migration needed for edge fields
+  - `<BaseEdge>` accepts `markerEnd="url(#markerId)"` and `markerStart="url(#markerId)"` strings directly
+---
