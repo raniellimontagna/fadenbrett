@@ -2,29 +2,6 @@ import { useCallback, useRef } from 'react'
 import { useReactFlow } from '@xyflow/react'
 import { useBoardStore, type Ruler } from '../../store/board-store'
 
-/** Snap threshold in flow units */
-const SNAP_THRESHOLD = 12
-
-export function useRulerSnap() {
-  const rulers = useBoardStore((s) => s.rulers)
-  const rulersVisible = useBoardStore((s) => s.rulersVisible)
-
-  const snapPosition = useCallback(
-    (pos: { x: number; y: number }): { x: number; y: number } => {
-      if (!rulersVisible || rulers.length === 0) return pos
-      let { x, y } = pos
-      for (const r of rulers) {
-        if (r.axis === 'v' && Math.abs(x - r.position) <= SNAP_THRESHOLD) x = r.position
-        if (r.axis === 'h' && Math.abs(y - r.position) <= SNAP_THRESHOLD) y = r.position
-      }
-      return { x, y }
-    },
-    [rulers, rulersVisible],
-  )
-
-  return snapPosition
-}
-
 interface RulerLineProps {
   ruler: Ruler
   canvasRect: DOMRect | null
