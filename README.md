@@ -8,120 +8,94 @@ Quadro de investigação digital interativo, self-hosted e open-source. Inspirad
 
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![CI](https://img.shields.io/github/actions/workflow/status/raniellimontagna/fadenbrett/ci.yml?label=CI)
+![Version](https://img.shields.io/badge/version-1.2.0-red)
 
 ---
 
-![Fadenbrett — quadro Dark](docs/screenshot.png)
+![Fadenbrett Web Hero](docs/images/hero_web.png)
+*Interface Web (Desktop) — Visão geral de uma investigação no canvas infinito.*
 
 ---
 
-## Features
+## ✨ Funcionalidades Principais
 
-- **Canvas infinito** com cards de personagens, post-its e conexões semânticas
-- **Colaboração em tempo real** via WebSockets (cursores remotos, sincronização de estado)
-- **Múltiplos boards** com troca instantânea
-- **Upload de imagens** para cards (armazenadas no servidor)
-- **Filtros, busca e timeline** para navegação por era/período
-- **Modo apresentação** com slides por nó
-- **Undo/Redo** ilimitado
-- **Exportação** PNG/JPEG do canvas
-- **Self-hosted** — seus dados ficam no seu servidor, sem telemetria
+Fadenbrett foi projetado para transformar caos em clareza visual, funcionando perfeitamente em dispositivos desktop e mobile.
 
-## Stack
+### 🕵️‍♂️ Investigação Narrativa
+- **Canvas Infinito**: Espaço ilimitado para expandir suas teorias, com movimentação fluida (pan/zoom).
+- **Cards de Entidade**: Represente personagens, locais ou evidências com avatares, descrições detalhadas e metadados.
+- **Conexões "Red String"**: Crie laços entre elementos usando fios vermelhos (yarn) com labels semânticos e estilos customizados.
+- **Post-its Reais**: Registre hipóteses rápidas com notas adesivas que parecem papel de verdade.
+
+### 🛠️ Organização e Precisão
+- **Réguas e Snapping**: Alinhamento milimétrico com réguas virtuais e guias magnéticas para um quadro organizado.
+- **Gestão de Camadas**: Controle total sobre a profundidade dos elementos (trazer para frente/enviar para trás).
+- **Múltiplos Boards**: Organize diferentes investigações ou arcos narrativos em quadros independentes dentro do mesmo projeto.
+- **Filtros e Dimming**: Foque no que importa com filtros por era, grupo ou tag, escurecendo o restante do canvas para manter o contexto.
+
+### 👥 Colaboração e Apresentação
+- **Real-time Collab**: Trabalhe acompanhado via WebSockets com sincronização instantânea de estado e visualização de cursores remotos.
+- **Modo Apresentação**: Guie outros pela sua investigação através de um percurso estruturado de "paradas" (slides) pelo canvas.
+- **Histórico Completo**: Desfaça e refaça ações com Undo/Redo ilimitado.
+
+---
+
+### 📱 Experiência Multi-Dispositivo
+O Fadenbrett é totalmente responsivo, permitindo que você consulte ou edite sua investigação de qualquer lugar.
+
+| Desktop | Mobile |
+|---|---|
+| ![Detail Web](docs/images/detail_web.png) | ![Detail Mobile](docs/images/detail_mobile.png) |
+| ![UI Web](docs/images/ui_web.png) | ![UI Mobile](docs/images/ui_mobile.png) |
+
+---
+
+## 🚀 Stack Técnica
 
 | Camada | Tecnologia |
 |---|---|
-| Frontend | React 19 + Vite + TypeScript + Tailwind v4 + Zustand + React Flow |
-| Backend | Fastify + Drizzle ORM + SQLite (better-sqlite3) |
-| Infra | Docker + Nginx + Compose |
+| **Frontend** | React 19 + Vite + TypeScript + Tailwind v4 + Zustand + React Flow |
+| **Backend** | Fastify + Drizzle ORM + SQLite (better-sqlite3) |
+| **Real-time** | WebSockets (Native Fastify implementation) |
+| **Infra** | Docker + Nginx + Compose + Proxmox Utility Scripts |
 
 ---
 
-## Deploy rápido
+## 🔒 Privacidade e Self-hosting
 
-### Pré-requisitos
+Fadenbrett é **local-first** e **privacy-focused**.
+- **Seus dados, sua casa**: O sistema é 100% self-hosted. Sem telemetria, sem nuvem, sem login obrigatório externamente.
+- **Docker Ready**: Deploy simplificado que mantém banco de dados e arquivos locais.
+- **Open Source**: Código aberto sob licença MIT.
 
-- Docker 24+ e Docker Compose v2
+---
 
-### Iniciar
+## 📦 Como Instalar
+
+### Docker (Recomendado)
 
 ```bash
 git clone https://github.com/raniellimontagna/fadenbrett.git
 cd fadenbrett/deploy
-cp .env.example .env   # ajuste PORT se necessário
+cp .env.example .env
 docker compose up -d
 ```
+Acesse em `http://localhost`.
 
-Acesse **http://localhost** no navegador.
-
-### Arquitetura
-
-```
-Browser
-  └─► Nginx :80 (web)
-        ├─ /api/*     → API :3001
-        ├─ /ws/*      → API :3001  (WebSocket)
-        ├─ /uploads/* → API :3001  (arquivos estáticos)
-        └─ /*         → SPA (Vite build)
-```
-
-Os dados (SQLite + uploads) ficam em volume Docker nomeado e persistem entre reinicializações.
-
-### Variáveis de ambiente
-
-| Variável | Padrão | Descrição |
-|---|---|---|
-| `PORT` | `80` | Porta exposta pelo Nginx |
-
----
-
-## Instalação no Proxmox VE
-
-Cole no shell do Proxmox:
-
+### Proxmox VE (LXC)
+Cole no terminal do Proxmox:
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/install.sh)
 ```
 
-Parâmetros opcionais (via variáveis de ambiente antes do pipe):
-
-```bash
-CT_ID=200 CT_RAM=1024 FADENBRETT_PORT=8080 bash <(curl -fsSL ...)
-```
-
-Para atualizar:
-
-```bash
-CT_ID=200 bash <(curl -fsSL https://raw.githubusercontent.com/raniellimontagna/fadenbrett/main/scripts/proxmox/update.sh)
-```
-
 ---
 
-## Desenvolvimento local
+## 🛠️ Desenvolvimento
 
 ```bash
-# Clone
-git clone https://github.com/raniellimontagna/fadenbrett.git
-cd fadenbrett
-
-# Instale as dependências
 pnpm install
-
-# Inicie o backend (porta 3001)
-pnpm --filter @fadenbrett/api dev
-
-# Inicie o frontend (porta 5173) em outro terminal
-pnpm --filter @fadenbrett/web dev
-```
-
-O frontend usa `VITE_API_URL=http://localhost:3001` por padrão.
-
-### Qualidade
-
-```bash
-pnpm type-check   # TypeScript
-pnpm lint         # ESLint
-pnpm test         # Vitest (integração API)
+pnpm dev      # Inicia web (5173) e api (3001)
+pnpm test     # Roda testes de integração
 ```
 
 ---
@@ -129,3 +103,6 @@ pnpm test         # Vitest (integração API)
 ## Licença
 
 MIT — veja [LICENSE](LICENSE).
+
+---
+*Feito com ❤️ para quem gosta de conectar os pontos.*
