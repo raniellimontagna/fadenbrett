@@ -93,3 +93,105 @@ body,
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Markdown content ───────────────────────────────────────────────────── */
+
+.markdown-content p {
+  margin-bottom: 0.5em;
+}
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+.markdown-content strong {
+  font-weight: 600;
+  color: var(--color-fadenbrett-text);
+}
+.markdown-content em {
+  font-style: italic;
+}
+.markdown-content a {
+  color: var(--color-fadenbrett-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-content a:hover {
+  opacity: 0.8;
+}
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.25em;
+  margin-bottom: 0.5em;
+}
+.markdown-content ul {
+  list-style-type: disc;
+}
+.markdown-content ol {
+  list-style-type: decimal;
+}
+.markdown-content li {
+  margin-bottom: 0.15em;
+}
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  font-weight: 600;
+  margin-top: 0.75em;
+  margin-bottom: 0.35em;
+  color: var(--color-fadenbrett-text);
+}
+.markdown-content h1 { font-size: 1.25em; }
+.markdown-content h2 { font-size: 1.1em; }
+.markdown-content h3 { font-size: 1em; }
+.markdown-content code {
+  background-color: color-mix(in srgb, var(--color-fadenbrett-muted) 20%, transparent);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+}
+.markdown-content pre {
+  background-color: color-mix(in srgb, var(--color-fadenbrett-muted) 15%, transparent);
+  padding: 0.75em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 0.5em;
+}
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+}
+.markdown-content blockquote {
+  border-left: 3px solid var(--color-fadenbrett-accent);
+  padding-left: 0.75em;
+  margin-left: 0;
+  margin-bottom: 0.5em;
+  opacity: 0.85;
+}
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--color-fadenbrett-muted) 30%, transparent);
+  margin: 0.75em 0;
+}
+.markdown-content del {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Compact mode: used in card nodes and note previews */
+.markdown-compact h1,
+.markdown-compact h2,
+.markdown-compact h3 {
+  font-size: 1em;
+  margin-top: 0.25em;
+  margin-bottom: 0.15em;
+}
+.markdown-compact pre {
+  padding: 0.4em;
+  font-size: 0.85em;
+}
+.markdown-compact p {
+  margin-bottom: 0.25em;
+}

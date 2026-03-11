@@ -1,6 +1,7 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { memo } from 'react'
 import type { CardData } from './types'
+import { MarkdownRenderer } from '../../components/markdown-renderer'
 
 function CardNodeComponent({ data, selected }: NodeProps) {
   const { title, description, avatarType, avatarValue, tags, eraLabel, groupColor, imageUrl } =
@@ -81,7 +82,9 @@ function CardNodeComponent({ data, selected }: NodeProps) {
         </div>
 
         {description && (
-          <p className="mt-2 line-clamp-2 text-xs text-fadenbrett-muted">{description}</p>
+          <div className="mt-2 line-clamp-3 text-xs text-fadenbrett-muted">
+            <MarkdownRenderer content={description} compact />
+          </div>
         )}
 
         {tags.length > 0 && (

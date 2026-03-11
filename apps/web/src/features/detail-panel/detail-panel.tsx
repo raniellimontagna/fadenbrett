@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useBoardStore } from '../../store/board-store'
 import { type CardData } from '../cards/types'
 import { type ConnectionData } from '../connections/types'
+import { MarkdownRenderer } from '../../components/markdown-renderer'
 
 interface ConnectionEntry {
   edgeId: string
@@ -138,7 +139,7 @@ export function DetailPanel({ onNavigateTo, onEdit }: DetailPanelProps) {
             <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-fadenbrett-muted">
               Descrição
             </h3>
-            <p className="text-sm leading-relaxed text-fadenbrett-text">{card.description}</p>
+            <MarkdownRenderer content={card.description} className="text-sm leading-relaxed text-fadenbrett-text" />
           </section>
         )}
 
@@ -156,6 +157,36 @@ export function DetailPanel({ onNavigateTo, onEdit }: DetailPanelProps) {
                 >
                   {tag}
                 </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Custom fields */}
+        {card.customFields && card.customFields.length > 0 && (
+          <section>
+            <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-fadenbrett-muted">
+              Campos
+            </h3>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+              {card.customFields.map((f, i) => (
+                <div key={i} className="contents">
+                  <span className="truncate text-xs text-fadenbrett-muted">{f.key}</span>
+                  {f.type === 'link' && f.value ? (
+                    <a
+                      href={f.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate text-xs text-fadenbrett-accent hover:underline"
+                    >
+                      {f.value}
+                    </a>
+                  ) : f.type === 'boolean' ? (
+                    <span className="text-xs text-fadenbrett-text">{f.value === 'true' ? 'Sim' : 'Não'}</span>
+                  ) : (
+                    <span className="truncate text-xs text-fadenbrett-text">{f.value || '—'}</span>
+                  )}
+                </div>
               ))}
             </div>
           </section>

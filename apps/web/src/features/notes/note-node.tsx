@@ -3,6 +3,7 @@ import { memo, useState, useCallback, useRef, useEffect } from 'react'
 import type { NoteData } from './types'
 import { NOTE_COLORS } from './types'
 import { useBoardStore } from '../../store/board-store'
+import { MarkdownRenderer } from '../../components/markdown-renderer'
 
 function NoteNodeComponent({ id, data, selected }: NodeProps) {
   const { content, color, rotation } = data as unknown as NoteData
@@ -98,7 +99,7 @@ function NoteNodeComponent({ id, data, selected }: NodeProps) {
           e.stopPropagation()
           setShowColorPicker(!showColorPicker)
         }}
-        className="absolute right-1 top-1 h-4 w-4 rounded-full opacity-0 transition-opacity group-hover:opacity-70 hover:!opacity-100"
+        className="absolute right-1 top-1 h-4 w-4 rounded-full opacity-0 transition-opacity group-hover:opacity-70 hover:opacity-100!"
         style={{ backgroundColor: textColor + '30' }}
       />
 
@@ -133,13 +134,12 @@ function NoteNodeComponent({ id, data, selected }: NodeProps) {
             style={{ color: textColor, minHeight: '60px' }}
             placeholder="Write a note..."
           />
+        ) : content ? (
+          <div style={{ color: textColor }}>
+            <MarkdownRenderer content={content} compact className="text-sm [&_strong]:text-inherit [&_h1]:text-inherit [&_h2]:text-inherit [&_h3]:text-inherit [&_a]:text-blue-700" />
+          </div>
         ) : (
-          <p
-            className="whitespace-pre-wrap text-sm"
-            style={{ color: textColor }}
-          >
-            {content || 'Double-click to edit...'}
-          </p>
+          <p className="text-sm" style={{ color: textColor }}>Double-click to edit...</p>
         )}
       </div>
 

@@ -18,7 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useBoardStore } from '../../store/board-store'
 import CardNodeComponent from '../cards/card-node'
 import { CardForm } from '../cards/card-form'
-import { type CardData, DEFAULT_CARD_DATA } from '../cards/types'
+import { type CardData, type CustomFieldType, DEFAULT_CARD_DATA } from '../cards/types'
 import { ConnectionForm } from '../connections/connection-form'
 import { type ConnectionData } from '../connections/types'
 import YarnEdgeComponent from '../connections/yarn-edge'
@@ -29,10 +29,12 @@ import { ConfirmDialog } from './confirm-dialog'
 import { FilterBar } from '../filters/filter-bar'
 import { DetailPanel } from '../detail-panel/detail-panel'
 import { ExportToolbar } from './export-toolbar'
+import { AutoLayoutToolbar } from './auto-layout-toolbar'
 import { PresentationOverlay } from '../presentation/presentation-overlay'
 import { RemoteCursors } from '../collab/remote-cursors'
 import { useLongPress } from '../../hooks/use-long-press'
 import { RulerOverlay } from './ruler-overlay'
+import { navigateRef } from '../../lib/navigate-ref'
 
 const nodeTypes: NodeTypes = {
   card: CardNodeComponent,
@@ -146,7 +148,8 @@ export function InvestigationCanvas() {
           card.title.toLowerCase().includes(q) ||
           card.description.toLowerCase().includes(q) ||
           (card.eraLabel ?? '').toLowerCase().includes(q) ||
-          card.tags.some((t) => t.toLowerCase().includes(q))
+          card.tags.some((t) => t.toLowerCase().includes(q)) ||
+          (card.customFields ?? []).some((f) => f.value.toString().toLowerCase().includes(q))
         if (matches) ids.add(node.id)
       } else if (node.type === 'note') {
         const note = node.data as unknown as { content: string }
@@ -232,6 +235,12 @@ export function InvestigationCanvas() {
     },
     [fitView, nodes, selectCard],
   )
+
+  // Expose navigateToNode for command palette
+  useEffect(() => {
+    navigateRef.current = navigateToNode
+    return () => { navigateRef.current = null }
+  }, [navigateToNode])
 
   const handleOpenEditFromPanel = useCallback(() => {
     if (!selectedCardId) return
@@ -568,6 +577,19 @@ export function InvestigationCanvas() {
     ? `Delete ${confirmDelete.nodeIds.length + confirmDelete.edgeIds.length} selected items? This cannot be undone.`
     : ''
 
+  // Board-level field suggestions for custom fields autocomplete
+  const fieldSuggestions = useMemo(() => {
+    const seen = new Map<string, CustomFieldType>()
+    for (const node of nodes) {
+      if (node.type !== 'card') continue
+      const card = node.data as unknown as CardData
+      for (const f of card.customFields ?? []) {
+        if (f.key && !seen.has(f.key)) seen.set(f.key, f.type)
+      }
+    }
+    return Array.from(seen, ([key, type]) => ({ key, type }))
+  }, [nodes])
+
   const savedLabel = lastSavedAt
     ? `Salvo ${lastSavedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
     : 'Não salvo'
@@ -619,6 +641,7 @@ export function InvestigationCanvas() {
             </button>
           </>
         )}
+        <AutoLayoutToolbar />
         <ExportToolbar containerRef={containerRef} />
       </div>
 
@@ -739,6 +762,7 @@ export function InvestigationCanvas() {
           onSave={handleSave}
           onCancel={() => setEditingCard(null)}
           onDelete={!isCreating ? handleDelete : undefined}
+          fieldSuggestions={fieldSuggestions}
         />
       )}
 

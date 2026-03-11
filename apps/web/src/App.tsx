@@ -8,6 +8,7 @@ import { PresentationPanel } from './features/presentation/presentation-panel'
 import { PresenceBar } from './features/collab/presence-bar'
 import { TemplateGallery } from './features/templates/template-gallery'
 import { ShortcutsOverlay } from './features/canvas/shortcuts-overlay'
+import { CommandPalette } from './features/command-palette/command-palette'
 import { useBoardStore } from './store/board-store'
 
 type ViewMode = 'canvas' | 'timeline'
@@ -19,6 +20,7 @@ export default function App() {
   const [presentationPanelOpen, setPresentationPanelOpen] = useState(false)
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
 
   const applyTemplate = useBoardStore((s) => s.applyTemplate)
   const loadBoards = useBoardStore((s) => s.loadBoards)
@@ -29,6 +31,12 @@ export default function App() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Ctrl+K / Cmd+K opens command palette (works even from inputs)
+      if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        setCommandPaletteOpen((p) => !p)
+        return
+      }
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if (e.key === '?') setShortcutsOpen((p) => !p)
@@ -399,6 +407,17 @@ export default function App() {
       {/* Shortcuts overlay */}
       {shortcutsOpen && (
         <ShortcutsOverlay onClose={() => setShortcutsOpen(false)} />
+      )}
+
+      {/* Command palette */}
+      {commandPaletteOpen && (
+        <CommandPalette
+          onClose={() => setCommandPaletteOpen(false)}
+          onSetView={(v) => { setView(v); setCommandPaletteOpen(false) }}
+          onTogglePresentation={() => setPresentationPanelOpen((p) => !p)}
+          onOpenTemplates={() => { setTemplateGalleryOpen(true); setCommandPaletteOpen(false) }}
+          onOpenShortcuts={() => { setShortcutsOpen(true); setCommandPaletteOpen(false) }}
+        />
       )}
     </div>
   )

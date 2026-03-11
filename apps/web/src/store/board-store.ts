@@ -242,6 +242,8 @@ export interface BoardState {
   updateRuler: (id: string, position: number) => void
   removeRuler: (id: string) => void
   toggleRulers: () => void
+  // Auto-layout
+  applyAutoLayout: (positions: Map<string, { x: number; y: number }>) => void
   // Templates
   applyTemplate: (name: string, nodes: Node[], edges: Edge[]) => void
 }
@@ -898,6 +900,17 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     const next = !get().rulersVisible
     set({ rulersVisible: next })
     lsSet('fadenbrett-rulers-visible', next)
+  },
+
+  applyAutoLayout: (positions) => {
+    const state = get()
+    state.pushHistory()
+    const updatedNodes = state.nodes.map((n) => {
+      const pos = positions.get(n.id)
+      if (!pos) return n
+      return { ...n, position: { x: pos.x, y: pos.y } }
+    })
+    set({ nodes: updatedNodes })
   },
 
   applyTemplate: (name, nodes, edges) => {
