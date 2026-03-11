@@ -1,6 +1,7 @@
-import { useState, useCallback, useRef } from 'react'
-import { type CardData, GROUP_COLORS } from './types'
+import { useState, useCallback, useRef, useMemo } from 'react'
+import { type CardData, type CustomField, type CustomFieldType, GROUP_COLORS } from './types'
 import { apiUploadImage } from '../../lib/api-client'
+import { MarkdownRenderer } from '../../components/markdown-renderer'
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB - enforced server-side too
 
@@ -9,9 +10,11 @@ interface CardFormProps {
   onSave: (data: Omit<CardData, 'id'>) => void
   onCancel: () => void
   onDelete?: () => void
+  /** Suggested field definitions from other cards in the board */
+  fieldSuggestions?: Array<{ key: string; type: CustomFieldType }>
 }
 
-export function CardForm({ initial, onSave, onCancel, onDelete }: CardFormProps) {
+export function CardForm({ initial, onSave, onCancel, onDelete, fieldSuggestions }: CardFormProps) {
   const [title, setTitle] = useState(initial.title)
   const [description, setDescription] = useState(initial.description)
   const [avatarType, setAvatarType] = useState(initial.avatarType)
@@ -20,6 +23,7 @@ export function CardForm({ initial, onSave, onCancel, onDelete }: CardFormProps)
   const [eraLabel, setEraLabel] = useState(initial.eraLabel)
   const [groupColor, setGroupColor] = useState(initial.groupColor)
   const [imageUrl, setImageUrl] = useState(initial.imageUrl ?? '')
+  const [customFields, setCustomFields] = useState<CustomField[]>(initial.customFields ?? [])
   const [imageDragOver, setImageDragOver] = useState(false)
   const [imageUploading, setImageUploading] = useState(false)
   const [imageError, setImageError] = useState<string | null>(null)
@@ -62,6 +66,7 @@ export function CardForm({ initial, onSave, onCancel, onDelete }: CardFormProps)
     (e: React.FormEvent) => {
       e.preventDefault()
       if (!title.trim()) return
+      const validFields = customFields.filter((f) => f.key.trim())
       onSave({
         title: title.trim(),
         description: description.trim(),
@@ -71,9 +76,10 @@ export function CardForm({ initial, onSave, onCancel, onDelete }: CardFormProps)
         eraLabel: eraLabel.trim(),
         groupColor,
         imageUrl,
+        customFields: validFields.length > 0 ? validFields : undefined,
       })
     },
-    [title, description, avatarType, avatarValue, tagsInput, eraLabel, groupColor, imageUrl, onSave],
+    [title, description, avatarType, avatarValue, tagsInput, eraLabel, groupColor, imageUrl, customFields, onSave],
   )
 
   return (
@@ -159,14 +165,22 @@ export function CardForm({ initial, onSave, onCancel, onDelete }: CardFormProps)
             </div>
 
             <div>
-              <label className="mb-1 block text-xs text-fadenbrett-muted">Descrição</label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-xs text-fadenbrett-muted">Descrição</label>
+                <span className="text-[10px] text-fadenbrett-muted/60">Markdown suportado</span>
+              </div>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Notas, teorias, detalhes..."
+                placeholder="Notas, teorias, detalhes... (suporta **negrito**, *itálico*, listas, links)"
                 rows={3}
                 className="w-full resize-none rounded border border-fadenbrett-muted/30 bg-fadenbrett-bg px-3 py-1.5 text-sm text-fadenbrett-text outline-none focus:border-fadenbrett-accent"
               />
+              {description.trim() && (
+                <div className="mt-1.5 rounded border border-fadenbrett-muted/15 bg-fadenbrett-bg/50 p-2.5 text-sm text-fadenbrett-text">
+                  <MarkdownRenderer content={description} />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3">
@@ -227,6 +241,36 @@ export function CardForm({ initial, onSave, onCancel, onDelete }: CardFormProps)
                 ))}
               </div>
             </div>
+            {/* Custom fields */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-xs text-fadenbrett-muted">Campos customizados</label>
+                <button
+                  type="button"
+                  onClick={() => setCustomFields((f) => [...f, { key: '', value: '', type: 'text' }])}
+                  className="text-[10px] text-fadenbrett-accent hover:underline"
+                >
+                  + Adicionar campo
+                </button>
+              </div>
+              {customFields.length > 0 && (
+                <div className="space-y-2">
+                  {customFields.map((field, idx) => (
+                    <CustomFieldRow
+                      key={idx}
+                      field={field}
+                      suggestions={fieldSuggestions}
+                      onChange={(updated) => {
+                        setCustomFields((prev) => prev.map((f, i) => (i === idx ? updated : f)))
+                      }}
+                      onRemove={() => {
+                        setCustomFields((prev) => prev.filter((_, i) => i !== idx))
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -260,6 +304,152 @@ export function CardForm({ initial, onSave, onCancel, onDelete }: CardFormProps)
           </div>
         </div>
       </form>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Custom field row sub-component
+// ---------------------------------------------------------------------------
+
+const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
+  { value: 'text', label: 'Texto' },
+  { value: 'number', label: 'Número' },
+  { value: 'date', label: 'Data' },
+  { value: 'boolean', label: 'Sim/Não' },
+  { value: 'link', label: 'Link' },
+]
+
+function CustomFieldRow({
+  field,
+  suggestions,
+  onChange,
+  onRemove,
+}: {
+  field: CustomField
+  suggestions?: Array<{ key: string; type: CustomFieldType }>
+  onChange: (f: CustomField) => void
+  onRemove: () => void
+}) {
+  const suggestedKeys = useMemo(() => {
+    if (!suggestions) return []
+    return [...new Set(suggestions.map((s) => s.key))]
+  }, [suggestions])
+
+  const handleKeyChange = (newKey: string) => {
+    // Auto-set type from suggestions if exact match
+    const match = suggestions?.find((s) => s.key === newKey)
+    if (match) {
+      onChange({ ...field, key: newKey, type: match.type })
+    } else {
+      onChange({ ...field, key: newKey })
+    }
+  }
+
+  const renderValueInput = () => {
+    const baseClass = 'min-w-0 flex-1 rounded border border-fadenbrett-muted/30 bg-fadenbrett-bg px-2 py-1 text-xs text-fadenbrett-text outline-none focus:border-fadenbrett-accent'
+
+    switch (field.type) {
+      case 'boolean':
+        return (
+          <button
+            type="button"
+            onClick={() => onChange({ ...field, value: field.value === 'true' ? 'false' : 'true' })}
+            className={`flex h-7 items-center gap-1.5 rounded border px-2 text-xs transition-colors ${
+              field.value === 'true'
+                ? 'border-green-500/40 bg-green-500/10 text-green-400'
+                : 'border-fadenbrett-muted/30 bg-fadenbrett-bg text-fadenbrett-muted'
+            }`}
+          >
+            <span className={`inline-block h-3 w-3 rounded-sm border ${
+              field.value === 'true' ? 'border-green-500 bg-green-500' : 'border-fadenbrett-muted/50'
+            }`} />
+            {field.value === 'true' ? 'Sim' : 'Não'}
+          </button>
+        )
+      case 'number':
+        return (
+          <input
+            type="number"
+            value={field.value}
+            onChange={(e) => onChange({ ...field, value: e.target.value })}
+            className={baseClass}
+            placeholder="0"
+          />
+        )
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={field.value}
+            onChange={(e) => onChange({ ...field, value: e.target.value })}
+            className={baseClass}
+          />
+        )
+      case 'link':
+        return (
+          <input
+            type="url"
+            value={field.value}
+            onChange={(e) => onChange({ ...field, value: e.target.value })}
+            className={baseClass}
+            placeholder="https://..."
+          />
+        )
+      default:
+        return (
+          <input
+            type="text"
+            value={field.value}
+            onChange={(e) => onChange({ ...field, value: e.target.value })}
+            className={baseClass}
+            placeholder="Valor"
+            maxLength={500}
+          />
+        )
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="relative min-w-0 flex-1">
+        <input
+          type="text"
+          value={field.key}
+          onChange={(e) => handleKeyChange(e.target.value)}
+          className="w-full rounded border border-fadenbrett-muted/30 bg-fadenbrett-bg px-2 py-1 text-xs text-fadenbrett-text outline-none focus:border-fadenbrett-accent"
+          placeholder="Nome"
+          maxLength={50}
+          list="field-suggestions"
+        />
+        {suggestedKeys.length > 0 && (
+          <datalist id="field-suggestions">
+            {suggestedKeys.map((k) => (
+              <option key={k} value={k} />
+            ))}
+          </datalist>
+        )}
+      </div>
+      <select
+        value={field.type}
+        onChange={(e) => onChange({ ...field, type: e.target.value as CustomFieldType, value: e.target.value === 'boolean' ? 'false' : '' })}
+        className="rounded border border-fadenbrett-muted/30 bg-fadenbrett-bg px-1 py-1 text-[10px] text-fadenbrett-text outline-none"
+      >
+        {FIELD_TYPES.map((t) => (
+          <option key={t.value} value={t.value}>{t.label}</option>
+        ))}
+      </select>
+      {renderValueInput()}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="shrink-0 rounded p-0.5 text-fadenbrett-muted hover:text-red-400"
+        title="Remover campo"
+      >
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
     </div>
   )
 }

@@ -1,4 +1,5 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
+import { useMemo, useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useBoardStore, type ActiveFilters } from '../../store/board-store'
 import { type CardData } from '../cards/types'
 import { CONNECTION_STYLES } from '../connections/types'
@@ -9,29 +10,66 @@ function hasActiveFilters(f: ActiveFilters): boolean {
 
 type OpenMenu = 'groups' | 'tags' | 'eras' | 'connections' | null
 
-// ── Dropdown container with click-outside close ──────────────────────────────
-function Dropdown({ onClose, children, position = 'bottom' }: { onClose: () => void; children: React.ReactNode; position?: 'top' | 'bottom' }) {
+// ── Dropdown container rendered via portal to escape overflow clipping ────────
+function Dropdown({
+  onClose,
+  children,
+  position = 'bottom',
+  anchorRef,
+}: {
+  onClose: () => void
+  children: React.ReactNode
+  position?: 'top' | 'bottom'
+  anchorRef: React.RefObject<HTMLButtonElement | null>
+}) {
   const ref = useRef<HTMLDivElement>(null)
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null)
+
+  useLayoutEffect(() => {
+    if (!anchorRef.current) return
+    const rect = anchorRef.current.getBoundingClientRect()
+    if (position === 'top') {
+      setCoords({ top: rect.top - 6, left: rect.left })
+    } else {
+      setCoords({ top: rect.bottom + 6, left: rect.left })
+    }
+  }, [anchorRef, position])
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+      if (
+        ref.current &&
+        !ref.current.contains(e.target as Node) &&
+        anchorRef.current &&
+        !anchorRef.current.contains(e.target as Node)
+      ) {
+        onClose()
+      }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [onClose])
+  }, [onClose, anchorRef])
 
-  const positionClasses = position === 'top' 
-    ? 'bottom-full mb-1.5' 
-    : 'top-full mt-1.5'
+  if (!coords) return null
 
-  return (
+  const transformOrigin = position === 'top' ? 'bottom left' : 'top left'
+
+  return createPortal(
     <div
       ref={ref}
-      className={`absolute left-0 z-50 min-w-[180px] max-w-[240px] rounded-xl border border-fadenbrett-muted/20 bg-fadenbrett-surface shadow-xl ${positionClasses}`}
+      style={{
+        position: 'fixed',
+        top: position === 'top' ? undefined : coords.top,
+        bottom: position === 'top' ? window.innerHeight - coords.top : undefined,
+        left: coords.left,
+        zIndex: 9999,
+        transformOrigin,
+      }}
+      className="min-w-45 max-w-60 rounded-xl border border-fadenbrett-muted/20 bg-fadenbrett-surface shadow-xl"
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -43,12 +81,14 @@ interface PillProps {
   onClick: () => void
   children?: React.ReactNode
   dropdownPosition?: 'top' | 'bottom'
+  buttonRef?: React.RefObject<HTMLButtonElement | null>
 }
 
-function FilterPill({ label, activeCount, open, onClick, children, dropdownPosition }: PillProps) {
+function FilterPill({ label, activeCount, open, onClick, children, dropdownPosition, buttonRef }: PillProps) {
   return (
     <div className="relative shrink-0">
       <button
+        ref={buttonRef}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={onClick}
         className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
@@ -86,6 +126,11 @@ export function FilterBar() {
   const { nodes, edges, activeFilters, toggleFilter, clearFilters } = useBoardStore()
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
   const [isMobile, setIsMobile] = useState(false)
+
+  const groupsRef = useRef<HTMLButtonElement>(null)
+  const tagsRef = useRef<HTMLButtonElement>(null)
+  const erasRef = useRef<HTMLButtonElement>(null)
+  const connectionsRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -144,8 +189,9 @@ export function FilterBar() {
           open={openMenu === 'groups'}
           onClick={() => toggle('groups')}
           dropdownPosition={dropdownPosition}
+          buttonRef={groupsRef}
         >
-          <Dropdown onClose={close} position={dropdownPosition}>
+          <Dropdown onClose={close} position={dropdownPosition} anchorRef={groupsRef}>
             <div className="p-2">
               <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Cor do grupo
@@ -185,8 +231,9 @@ export function FilterBar() {
           open={openMenu === 'tags'}
           onClick={() => toggle('tags')}
           dropdownPosition={dropdownPosition}
+          buttonRef={tagsRef}
         >
-          <Dropdown onClose={close} position={dropdownPosition}>
+          <Dropdown onClose={close} position={dropdownPosition} anchorRef={tagsRef}>
             <div className="flex max-h-56 flex-col overflow-hidden">
               <p className="shrink-0 px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Tags
@@ -230,8 +277,9 @@ export function FilterBar() {
           open={openMenu === 'eras'}
           onClick={() => toggle('eras')}
           dropdownPosition={dropdownPosition}
+          buttonRef={erasRef}
         >
-          <Dropdown onClose={close} position={dropdownPosition}>
+          <Dropdown onClose={close} position={dropdownPosition} anchorRef={erasRef}>
             <div className="flex max-h-56 flex-col overflow-hidden">
               <p className="shrink-0 px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Era / Período
@@ -275,8 +323,9 @@ export function FilterBar() {
           open={openMenu === 'connections'}
           onClick={() => toggle('connections')}
           dropdownPosition={dropdownPosition}
+          buttonRef={connectionsRef}
         >
-          <Dropdown onClose={close} position={dropdownPosition}>
+          <Dropdown onClose={close} position={dropdownPosition} anchorRef={connectionsRef}>
             <div className="p-2">
               <p className="mb-1 px-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-fadenbrett-muted">
                 Estilo

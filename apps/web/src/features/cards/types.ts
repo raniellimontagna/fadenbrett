@@ -1,3 +1,11 @@
+export type CustomFieldType = 'text' | 'number' | 'date' | 'boolean' | 'link'
+
+export interface CustomField {
+  key: string
+  value: string
+  type: CustomFieldType
+}
+
 export interface CardData {
   id: string
   title: string
@@ -8,6 +16,7 @@ export interface CardData {
   eraLabel: string
   groupColor: string
   imageUrl?: string
+  customFields?: CustomField[]
 }
 
 export const GROUP_COLORS = [
