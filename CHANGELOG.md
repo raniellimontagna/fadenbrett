@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/raniellimontagna/fadenbrett/compare/v1.2.0...v1.3.0) (2026-03-11)
+
+
+### Features
+
+* S042-S045 - auto-layout, custom fields, command palette, markdown ([ab72c24](https://github.com/raniellimontagna/fadenbrett/commit/ab72c24cf058264bf6e2f8f9a2fe930f9961fbac))
+* v2 improvements ([81d7a7b](https://github.com/raniellimontagna/fadenbrett/commit/81d7a7bb4da1e0488f4d54eacf01f7f2df94b244))
+
+
+### Bug Fixes
+
+* renders filter dropdowns via portal to fix overflow issues ([0d81229](https://github.com/raniellimontagna/fadenbrett/commit/0d81229269c96ea0661e9935a00a372f56890faf))
+
 ## [1.2.0](https://github.com/raniellimontagna/fadenbrett/compare/v1.1.0...v1.2.0) (2026-03-08)
 
 
