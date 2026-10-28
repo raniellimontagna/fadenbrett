@@ -1,2 +1,8 @@
 packages:
   - "apps/*"
+
+# pnpm 11+ no longer reads "pnpm.onlyBuiltDependencies" from package.json and fails on unreviewed build scripts.
+allowBuilds:
+  better-sqlite3: true
+  esbuild: false
+  es5-ext: false
