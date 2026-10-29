@@ -26,6 +26,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -37,24 +39,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Get latest release tag
+      # Only the release commit gets the version tag, so later pushes to main
+      # never overwrite an image that was already published for a version.
+      - name: Get release tag for this commit
         id: version
         run: |
           TAG=$(gh release view --json tagName -q '.tagName' 2>/dev/null || echo "")
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          TAG_SHA=""
           if [ -n "$TAG" ]; then
+            TAG_SHA=$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" -q '.sha' 2>/dev/null || echo "")
+          fi
+          if [ -n "$TAG" ] && [ "$TAG_SHA" = "$HEAD_SHA" ]; then
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
             echo "has_version=true" >> "$GITHUB_OUTPUT"
           else
+            echo "tag=" >> "$GITHUB_OUTPUT"
             echo "has_version=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
 
       # ── Web image ─────────────────────────────────────────────────────────
       - name: Docker meta (web)
         id: meta-web
         uses: docker/metadata-action@v5
         with:
+          context: git
           images: ${{ env.IMAGE_WEB }}
           tags: |
             type=raw,value=latest
@@ -78,6 +89,7 @@ jobs:
         id: meta-api
         uses: docker/metadata-action@v5
         with:
+          context: git
           images: ${{ env.IMAGE_API }}
           tags: |
             type=raw,value=latest
