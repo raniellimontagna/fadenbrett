@@ -26,7 +26,20 @@ export const CreateCardSchema = z.object({
   tags: z.array(z.string()).default([]),
 });
 
-export const UpdateCardSchema = CreateCardSchema.partial();
+// Zod 4 applies .default() inside .partial(), so the Update schemas list their
+// fields without defaults. Otherwise a PATCH resets every field it does not send.
+export const UpdateCardSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1).max(500).optional(),
+  description: z.string().optional(),
+  avatar: z.string().optional(),
+  eraLabel: z.string().optional(),
+  groupColor: z.string().optional(),
+  imageUrl: z.string().optional(),
+  positionX: z.number().optional(),
+  positionY: z.number().optional(),
+  tags: z.array(z.string()).optional(),
+});
 
 export const CreateNoteSchema = z.object({
   id: z.string().optional(),
@@ -37,7 +50,14 @@ export const CreateNoteSchema = z.object({
   positionY: z.number().default(0),
 });
 
-export const UpdateNoteSchema = CreateNoteSchema.partial();
+export const UpdateNoteSchema = z.object({
+  id: z.string().optional(),
+  content: z.string().optional(),
+  color: z.string().optional(),
+  rotation: z.number().optional(),
+  positionX: z.number().optional(),
+  positionY: z.number().optional(),
+});
 
 export const CreateConnectionSchema = z.object({
   id: z.string().optional(),
@@ -50,7 +70,14 @@ export const CreateConnectionSchema = z.object({
   curvature: z.number().min(0).max(1).default(0.3),
 });
 
-export const UpdateConnectionSchema = CreateConnectionSchema.partial().omit({ sourceId: true, targetId: true });
+export const UpdateConnectionSchema = z.object({
+  id: z.string().optional(),
+  label: z.string().optional(),
+  style: z.enum(['solid', 'dashed', 'dotted']).optional(),
+  color: z.string().optional(),
+  routeType: z.enum(['bezier', 'straight', 'step']).optional(),
+  curvature: z.number().min(0).max(1).optional(),
+});
 
 export const AutosaveSchema = z.object({
   nodes: z.array(z.unknown()),
