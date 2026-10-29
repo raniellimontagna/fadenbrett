@@ -44,6 +44,7 @@ jobs:
       - name: Get release tag for this commit
         id: version
         run: |
+          echo "short_sha=${HEAD_SHA:0:7}" >> "$GITHUB_OUTPUT"
           TAG=$(gh release view --json tagName -q '.tagName' 2>/dev/null || echo "")
           TAG_SHA=""
           if [ -n "$TAG" ]; then
@@ -65,11 +66,10 @@ jobs:
         id: meta-web
         uses: docker/metadata-action@v5
         with:
-          context: git
           images: ${{ env.IMAGE_WEB }}
           tags: |
             type=raw,value=latest
-            type=sha,prefix=
+            type=raw,value=${{ steps.version.outputs.short_sha }}
             type=raw,value=${{ steps.version.outputs.tag }},enable=${{ steps.version.outputs.has_version }}
 
       - name: Build & push web image
@@ -89,11 +89,10 @@ jobs:
         id: meta-api
         uses: docker/metadata-action@v5
         with:
-          context: git
           images: ${{ env.IMAGE_API }}
           tags: |
             type=raw,value=latest
-            type=sha,prefix=
+            type=raw,value=${{ steps.version.outputs.short_sha }}
             type=raw,value=${{ steps.version.outputs.tag }},enable=${{ steps.version.outputs.has_version }}
 
       - name: Build & push api image
