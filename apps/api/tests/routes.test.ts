@@ -135,6 +135,9 @@ describe('Boards CRUD', () => {
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().title).toBe('Heisenberg');
+      // Fields the PATCH did not send keep their values
+      expect(res.json().eraLabel).toBe('Season 1');
+      expect(res.json().tags).toContain('chemist');
     });
 
     it('DELETE /api/boards/:boardId/cards/:id — deletes card', async () => {
@@ -153,7 +156,7 @@ describe('Boards CRUD', () => {
       const res = await app.inject({
         method: 'POST',
         url: `/api/boards/${boardId}/notes`,
-        payload: { content: 'I am the danger', color: '#fde68a' },
+        payload: { content: 'I am the danger', color: '#fde68a', positionX: 120 },
       });
       expect(res.statusCode).toBe(201);
       noteId = res.json().id;
@@ -167,6 +170,7 @@ describe('Boards CRUD', () => {
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().content).toBe('I am the one who knocks');
+      expect(res.json().positionX).toBe(120);
     });
 
     it('DELETE /api/boards/:boardId/notes/:id — deletes note', async () => {
@@ -222,6 +226,7 @@ describe('Boards CRUD', () => {
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().label).toBe('rivalry');
+      expect(res.json().style).toBe('dashed');
     });
 
     it('DELETE /api/boards/:boardId/connections/:id — deletes connection', async () => {
