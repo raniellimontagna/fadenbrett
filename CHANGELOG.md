@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/raniellimontagna/fadenbrett/compare/v1.3.0...v1.3.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **docker:** healthchecks on 127.0.0.1 and pin pnpm 12.16.1 ([#10](https://github.com/raniellimontagna/fadenbrett/issues/10)) ([f114498](https://github.com/raniellimontagna/fadenbrett/commit/f114498c06163476a91eee9045b11cf18e88cd9f))
+
 ## [1.3.0](https://github.com/raniellimontagna/fadenbrett/compare/v1.2.0...v1.3.0) (2026-03-11)
 
 
