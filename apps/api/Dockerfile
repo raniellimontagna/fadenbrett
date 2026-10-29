@@ -5,7 +5,7 @@ FROM node:22-alpine AS builder
 
 # python3 + make + g++ are required to compile better-sqlite3 native bindings
 RUN apk add --no-cache python3 make g++
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@12.16.1 --activate
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN pnpm --filter @fadenbrett/api build
 FROM node:22-alpine AS runner
 
 RUN apk add --no-cache python3 make g++ && \
-    corepack enable && corepack prepare pnpm@latest --activate
+    corepack enable && corepack prepare pnpm@12.16.1 --activate
 
 WORKDIR /app
 
@@ -46,7 +46,8 @@ ENV NODE_ENV=production \
 
 EXPOSE 3001
 
+# 127.0.0.1, not localhost: Alpine resolves localhost to ::1 and the server only listens on IPv4
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD wget -qO- http://localhost:3001/health || exit 1
+  CMD wget -qO- http://127.0.0.1:3001/health || exit 1
 
 CMD ["node", "apps/api/dist/server.js"]
