@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/raniellimontagna/fadenbrett/compare/v1.3.1...v1.3.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* **deps:** upgrade fastify 5, zod 4 and drizzle to patch security alerts ([#12](https://github.com/raniellimontagna/fadenbrett/issues/12)) ([4bc7ef4](https://github.com/raniellimontagna/fadenbrett/commit/4bc7ef4b3b774ddc1caecfe561908a7fa5dccefd))
+
 ## [1.3.1](https://github.com/raniellimontagna/fadenbrett/compare/v1.3.0...v1.3.1) (2026-10-29)
 
 
